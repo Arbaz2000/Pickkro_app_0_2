@@ -7,10 +7,12 @@ import {
   ScrollView,
   Image,
   TextInput,
+  Modal,
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import PriceCalculator from '@/components/PriceCalculator';
 
 const QUICK_ACTIONS = [
   { id: 1, title: 'Send Package', icon: 'cube', color: '#007AFF' },
@@ -39,10 +41,12 @@ const ACTIVE_ORDERS = [
 
 export default function Dashboard() {
   const [location, setLocation] = useState('New York, NY');
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const toggleMenu = () => setMenuVisible(!menuVisible);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
       <View style={styles.header}>
         <Image
           source={{ uri: 'https://via.placeholder.com/40' }}
@@ -53,12 +57,44 @@ export default function Dashboard() {
           <Text style={styles.locationText}>{location}</Text>
           <Ionicons name="chevron-down" size={20} color="#007AFF" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <Ionicons name="menu" size={24} color="#333" />
-        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
+    <Ionicons name="menu" size={24} color="#333" />
+  </TouchableOpacity>
       </View>
-
-      {/* Search Bar */}
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleMenu}>
+        <TouchableOpacity style={styles.menuOverlay} onPress={toggleMenu}>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Orders</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Terms & Conditions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Help</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>About Us</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Language</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#666" />
         <TextInput
@@ -67,14 +103,27 @@ export default function Dashboard() {
           placeholderTextColor="#666"
         />
       </View>
-
-      {/* Quick Actions */}
+      <View style={styles.promotionalBanner}>
+        <Image
+          source={{
+            uri: 'https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+          }}
+          style={styles.bannerImage}
+        />
+        <View style={styles.bannerContent}>
+          <Text style={styles.bannerTitle}>50% Off First Delivery</Text>
+          <Text style={styles.bannerSubtitle}>Use code: FIRST50</Text>
+        </View>
+      </View>
+      <View style={styles.priceCalculatorContainer}>
+        <PriceCalculator />
+      </View>
       <View style={styles.quickActionsGrid}>
         {QUICK_ACTIONS.map((action) => (
           <Link href="/book" key={action.id} asChild>
             <TouchableOpacity style={styles.quickActionCard}>
               <View
-                style={[styles.iconContainer, { backgroundColor: action.color }]}>
+                style={[styles.iconContainer, { backgroundColor: action.color }]} >
                 <Ionicons name={action.icon} size={24} color="#fff" />
               </View>
               <Text style={styles.quickActionTitle}>{action.title}</Text>
@@ -82,8 +131,6 @@ export default function Dashboard() {
           </Link>
         ))}
       </View>
-
-      {/* Categories */}
       <Text style={styles.sectionTitle}>Services</Text>
       <ScrollView
         horizontal
@@ -98,22 +145,6 @@ export default function Dashboard() {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {/* Promotional Banner */}
-      <View style={styles.promotionalBanner}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-          }}
-          style={styles.bannerImage}
-        />
-        <View style={styles.bannerContent}>
-          <Text style={styles.bannerTitle}>50% Off First Delivery</Text>
-          <Text style={styles.bannerSubtitle}>Use code: FIRST50</Text>
-        </View>
-      </View>
-
-      {/* Active Orders */}
       <Text style={styles.sectionTitle}>Active Orders</Text>
       {ACTIVE_ORDERS.map((order) => (
         <Link href="/orders" key={order.id} asChild>
@@ -347,5 +378,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginRight: 4,
+  },
+
+  // Menu Modal Styles
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  menuContainer: {
+    backgroundColor: '#fff',
+    width: '50%',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    top:50,
+    right:100,
+    padding: 10,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+  },  
+  menuItem: {
+    paddingVertical: 5,
+  },
+  menuText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  menuButton: {
+    position: 'absolute',
+    left: 16,
+    top:60
+  },
+  priceCalculatorContainer: {
+    marginHorizontal: 16,
+    marginBottom: 24,
   },
 });

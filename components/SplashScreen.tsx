@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Image } from 'react-native';
 import { router } from 'expo-router';
 import Animated, {
   FadeIn,
@@ -11,7 +11,6 @@ export function SplashScreen() {
     const timer = setTimeout(() => {
       router.replace('/auth');
     }, 3000);
-
     return () => clearTimeout(timer);
   }, []);
 
@@ -20,7 +19,7 @@ export function SplashScreen() {
       entering={FadeIn.duration(1000)}
       exiting={FadeOut.duration(500)}
       style={styles.container}>
-      <Text style={styles.title}>Your App Name</Text>
+      <Image source={require('../assets/images/splash.png')} style={styles.Icon}/>
       <Text style={styles.subtitle}>Welcome</Text>
     </Animated.View>
   );
@@ -42,5 +41,9 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 18,
     color: '#666',
+  },
+  Icon:{
+    width: 200,
+    height: 150,
   },
 });
