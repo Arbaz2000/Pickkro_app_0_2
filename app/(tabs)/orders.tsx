@@ -24,7 +24,6 @@ export default function Orders() {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Map View */}
         <View style={styles.mapContainer}>
           <View style={styles.mapPlaceholder}>
             <Text style={styles.mapText}>Live Tracking Map</Text>
@@ -35,8 +34,6 @@ export default function Orders() {
             <Text style={styles.etaSubtext}>Driver is 2.5 km away</Text>
           </View>
         </View>
-
-        {/* Delivery Status */}
         <View style={styles.statusContainer}>
           {DELIVERY_STEPS.map((step, index) => (
             <View key={step.id} style={styles.statusStep}>
@@ -145,6 +142,7 @@ const styles = StyleSheet.create({
     bottom: 32,
     left: 32,
     right: 32,
+    top:32,
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
@@ -252,6 +250,7 @@ const styles = StyleSheet.create({
   },
   driverActions: {
     flexDirection: 'row',
+    gap:5
   },
   driverButton: {
     width: 44,
@@ -260,7 +259,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    right:80,
   },
   actionButtons: {
     flexDirection: 'row',

@@ -8,7 +8,6 @@ import {
   Image,
   TextInput,
   Modal,
-  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
@@ -58,8 +57,8 @@ export default function Dashboard() {
           <Ionicons name="chevron-down" size={20} color="#007AFF" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
-    <Ionicons name="menu" size={24} color="#333" />
-  </TouchableOpacity>
+          <Ionicons name="menu" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
       <Modal
         visible={menuVisible}
@@ -124,7 +123,11 @@ export default function Dashboard() {
             <TouchableOpacity style={styles.quickActionCard}>
               <View
                 style={[styles.iconContainer, { backgroundColor: action.color }]} >
-                <Ionicons name={action.icon} size={24} color="#fff" />
+                <Ionicons
+                  name={action.icon as keyof typeof Ionicons.glyphMap}
+                  size={24}
+                  color="#fff"
+                />
               </View>
               <Text style={styles.quickActionTitle}>{action.title}</Text>
             </TouchableOpacity>
@@ -139,7 +142,11 @@ export default function Dashboard() {
         {CATEGORIES.map((category) => (
           <TouchableOpacity key={category.id} style={styles.categoryCard}>
             <View style={styles.categoryIcon}>
-              <Ionicons name={category.icon} size={24} color="#007AFF" />
+              <Ionicons
+                name={category.icon as keyof typeof Ionicons.glyphMap}
+                size={24}
+                color="#007AFF"
+              />
             </View>
             <Text style={styles.categoryTitle}>{category.title}</Text>
           </TouchableOpacity>
@@ -397,15 +404,15 @@ const styles = StyleSheet.create({
     width: '50%',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    top:50,
-    right:100,
+    top: 50,
+    right: 100,
     padding: 10,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-  },  
+  },
   menuItem: {
     paddingVertical: 5,
   },
@@ -416,7 +423,7 @@ const styles = StyleSheet.create({
   menuButton: {
     position: 'absolute',
     left: 16,
-    top:60
+    top: 60,
   },
   priceCalculatorContainer: {
     marginHorizontal: 16,
