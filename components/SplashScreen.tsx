@@ -9,7 +9,7 @@ import Animated, {
 export function SplashScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace('/auth');
+      router.navigate('/LanguageSelect');
     }, 3000);
     return () => clearTimeout(timer);
   }, []);

@@ -41,9 +41,9 @@ const ACTIVE_ORDERS = [
 export default function Dashboard() {
   const [location, setLocation] = useState('New York, NY');
   const [menuVisible, setMenuVisible] = useState(false);
-
+  const [showPriceCalculator, setShowPriceCalculator] = useState(false);
   const toggleMenu = () => setMenuVisible(!menuVisible);
-
+  const togglePriceCalculator = () => setShowPriceCalculator(!showPriceCalculator);
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
@@ -103,21 +103,115 @@ export default function Dashboard() {
         />
       </View>
       <View style={styles.promotionalBanner}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1586880244406-556ebe35f282?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-          }}
-          style={styles.bannerImage}
-        />
-        <View style={styles.bannerContent}>
-          <Text style={styles.bannerTitle}>50% Off First Delivery</Text>
-          <Text style={styles.bannerSubtitle}>Use code: FIRST50</Text>
+        
+        <Text style={styles.bannerTitle}>Same Day Delivery</Text>
+        <Text style={styles.bannerSubtitle}>When You Need It Most</Text>
+        <View style={styles.signUpContainer}>
+          <Text style={styles.signUpTitle}>Quick Sign Up</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email Address"
+            placeholderTextColor="#666"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone Number"
+            placeholderTextColor="#666"
+            keyboardType="phone-pad"
+          />
+          <TouchableOpacity style={styles.signupButton}>
+            <Text style={styles.signupButtonText}>signup</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.loginButton}>
+            <Text style={styles.loginButtonText}>Login</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.guestButton}>
+            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.servicesContainer}>
+          <Text style={styles.servicesTitle}>Our Services</Text>
+          <View style={styles.serviceCards}>
+            <View style={styles.serviceCard}>
+              <Image
+                source={require('../../assets/images/delivery.png')}
+                style={styles.serviceImage}
+              />
+              <Text style={styles.serviceTitle}>Same Day Delivery</Text>
+              <Text style={styles.serviceDescription}>Delivery within 90 mins</Text>
+            </View>
+            <View style={styles.serviceCard}>
+              <Image
+                source={require('../../assets/images/express.png')}
+                style={styles.serviceImage}
+              />
+              <Text style={styles.serviceTitle}>Express Hour</Text>
+              <Text style={styles.serviceDescription}>Ultra-fast delivery service</Text>
+            </View>
+          </View>
         </View>
       </View>
-      <View style={styles.priceCalculatorContainer}>
-        <PriceCalculator />
+      <View style={styles.calculatorSection}>
+        <TouchableOpacity style={styles.calculatorCard} onPress={togglePriceCalculator}>
+          <Text style={styles.calculatorText}>Price calculator</Text>
+          <View style={styles.calculatorIconContainer}>
+            <Ionicons name="calculator" size={24} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.calculatorCard}>
+          <Text style={styles.calculatorText}>2 Wheeler</Text>
+          <View style={styles.calculatorIconContainer}>
+            <Ionicons name="bicycle" size={24} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
       </View>
-      <View style={styles.quickActionsGrid}>
+      <Modal
+        visible={showPriceCalculator}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={togglePriceCalculator}>
+        <TouchableOpacity 
+          style={styles.calculatorOverlay} 
+          onPress={togglePriceCalculator}
+          activeOpacity={1}>
+          <View style={styles.calculatorModal}>
+            <View style={styles.calculatorHeader}>
+              <Text style={styles.calculatorTitle}>Price Calculator</Text>
+              <TouchableOpacity onPress={togglePriceCalculator}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <PriceCalculator />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      {showPriceCalculator && (
+        <View style={styles.priceCalculatorContainer}>
+          <PriceCalculator />
+        </View>
+      )}
+      <View style={styles.bannerContent}>
+        <Text style={styles.bannerHeading}>Need Delivery?</Text>
+        <Text style={styles.bannerSubHeading}>We'll Make It Happen!</Text>
+      </View>
+        <View style={styles.updatesContainer}>
+          <View style={styles.updateHeader}>
+            <View style={styles.updateTitleContainer}>
+              <Image 
+                source={require('../../assets/icon/update.png')}
+                style={styles.updateIcon}
+              />
+              <Text style={styles.updateTitle}>Latest Updates</Text>
+            </View>
+            <TouchableOpacity>
+              <Text style={styles.viewAllText}>View all</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.updateItem}>
+            <Text style={styles.updateText}>New express delivery service available!</Text>
+          </View>
+        </View>
+      {/* <View style={styles.quickActionsGrid}>
         {QUICK_ACTIONS.map((action) => (
           <Link href="/book" key={action.id} asChild>
             <TouchableOpacity style={styles.quickActionCard}>
@@ -182,7 +276,7 @@ export default function Dashboard() {
             </View>
           </TouchableOpacity>
         </Link>
-      ))}
+      ))} */}
     </ScrollView>
   );
 }
@@ -290,30 +384,108 @@ const styles = StyleSheet.create({
   promotionalBanner: {
     marginHorizontal: 16,
     marginBottom: 24,
-    borderRadius: 16,
-    overflow: 'hidden',
-    height: 160,
-  },
-  bannerImage: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  bannerContent: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
     padding: 16,
-    justifyContent: 'flex-end',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   bannerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#333',
     marginBottom: 4,
   },
   bannerSubtitle: {
     fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+  },
+  signUpContainer: {
+    marginBottom: 20,
+  },
+  signUpTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 16,
+  },
+  signupButton: {
+    backgroundColor: '#000',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  signupButtonText: {
     color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loginButton: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  loginButtonText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  guestButton: {
+    padding: 12,
+    alignItems: 'center',
+  },
+  guestButtonText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  servicesContainer: {
+    marginTop: 20,
+  },
+  servicesTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  serviceCards: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  serviceCard: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  serviceImage: {
+    width: 60,
+    height: 60,
+    marginBottom: 12,
+  },
+  serviceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  serviceDescription: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
   },
   orderCard: {
     backgroundColor: '#fff',
@@ -428,5 +600,127 @@ const styles = StyleSheet.create({
   priceCalculatorContainer: {
     marginHorizontal: 16,
     marginBottom: 24,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bannerContent: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  bannerHeading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#DF7016',
+    marginBottom: 8,
+  },
+  bannerSubHeading: {
+    fontSize: 16,
+    color: '#4B5563',
+  },
+  updatesContainer: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 20,
+  },
+  updateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  updateTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#007AFF',
+  },
+  updateItem: {
+    paddingVertical: 1,
+  },
+  updateText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  calculatorSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  calculatorCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  calculatorIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  calculatorText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom:20
+  },
+  calculatorOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  calculatorModal: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 16,
+    maxHeight: '80%',
+  },
+  calculatorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  calculatorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  updateTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  updateIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
   },
 });

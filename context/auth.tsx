@@ -12,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (data: { email: string; password: string; name: string }) => Promise<void>;
+  signInAsGuest: () => Promise<void>;
   signOut: () => void;
 }
 
@@ -20,6 +21,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const signInAsGuest = async () => {
+    try {
+      setLoading(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setUser({
+        id: 'guest',
+        email: 'guest@example.com',
+        name: 'Guest User',
+      });
+      
+      router.replace('/(tabs)/dashboard');
+    } catch (error) {
+      throw new Error('Guest login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -69,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInAsGuest, signOut }}>
       {children}
     </AuthContext.Provider>
   );

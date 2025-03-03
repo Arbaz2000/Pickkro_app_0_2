@@ -1,467 +1,324 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-
-const PACKAGE_SIZES = [
-  { id: 'S', label: 'Small', desc: 'Up to 5kg' },
-  { id: 'M', label: 'Medium', desc: 'Up to 15kg' },
-  { id: 'L', label: 'Large', desc: 'Up to 30kg' },
-];
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { router } from 'expo-router';
 
 export default function Book() {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('');
-
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {[1, 2, 3, 4].map((step) => (
-        <View key={step} style={styles.stepContainer}>
-          <View
-            style={[
-              styles.stepDot,
-              currentStep >= step && styles.activeStepDot,
-            ]}>
-            <Text
-              style={[
-                styles.stepNumber,
-                currentStep >= step && styles.activeStepNumber,
-              ]}>
-              {step}
-            </Text>
-          </View>
-          {step < 4 && <View style={styles.stepLine} />}
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderPickupLocation = () => (
-    <View style={styles.stepContent}>
-      <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapText}>Map View</Text>
-      </View>
-      <View style={styles.addressInputContainer}>
-        <Ionicons name="location" size={20} color="#007AFF" />
-        <TextInput
-          style={styles.addressInput}
-          placeholder="Enter pickup address"
-          placeholderTextColor="#666"
-        />
-      </View>
-      <TouchableOpacity style={styles.currentLocationButton}>
-        <Ionicons name="navigate" size={20} color="#007AFF" />
-        <Text style={styles.currentLocationText}>Use Current Location</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderDeliveryLocation = () => (
-    <View style={styles.stepContent}>
-      <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapText}>Map View</Text>
-      </View>
-      <View style={styles.addressInputContainer}>
-        <Ionicons name="location" size={20} color="#007AFF" />
-        <TextInput
-          style={styles.addressInput}
-          placeholder="Enter delivery address"
-          placeholderTextColor="#666"
-        />
-      </View>
-      <TouchableOpacity style={styles.saveAddressButton}>
-        <Ionicons name="bookmark-outline" size={20} color="#007AFF" />
-        <Text style={styles.saveAddressText}>Save this address</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderPackageDetails = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Package Size</Text>
-      <View style={styles.sizeSelector}>
-        {PACKAGE_SIZES.map((size) => (
-          <TouchableOpacity
-            key={size.id}
-            style={[
-              styles.sizeOption,
-              selectedSize === size.id && styles.selectedSize,
-            ]}
-            onPress={() => setSelectedSize(size.id)}>
-            <Text
-              style={[
-                styles.sizeLabel,
-                selectedSize === size.id && styles.selectedSizeLabel,
-              ]}>
-              {size.label}
-            </Text>
-            <Text
-              style={[
-                styles.sizeDesc,
-                selectedSize === size.id && styles.selectedSizeDesc,
-              ]}>
-              {size.desc}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <Text style={styles.sectionTitle}>Package Weight</Text>
-      <View style={styles.weightInput}>
-        <TextInput
-          style={styles.weightValue}
-          placeholder="0.0"
-          keyboardType="decimal-pad"
-        />
-        <Text style={styles.weightUnit}>kg</Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>Description</Text>
-      <TextInput
-        style={styles.descriptionInput}
-        placeholder="Describe your package"
-        multiline
-        numberOfLines={4}
-      />
-
-      <TouchableOpacity style={styles.uploadButton}>
-        <Ionicons name="camera" size={24} color="#007AFF" />
-        <Text style={styles.uploadText}>Add Package Photo</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderDeliveryPreferences = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.sectionTitle}>Delivery Time</Text>
-      <View style={styles.timeSlotContainer}>
-        <TouchableOpacity style={styles.timeSlot}>
-          <Text style={styles.timeSlotText}>Today</Text>
-          <Text style={styles.timeSlotSubtext}>2-4 PM</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.timeSlot, styles.selectedTimeSlot]}>
-          <Text style={[styles.timeSlotText, styles.selectedTimeSlotText]}>
-            Tomorrow
-          </Text>
-          <Text style={[styles.timeSlotSubtext, styles.selectedTimeSlotText]}>
-            9-11 AM
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.timeSlot}>
-          <Text style={styles.timeSlotText}>Custom</Text>
-          <Text style={styles.timeSlotSubtext}>Pick time</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.sectionTitle}>Special Instructions</Text>
-      <TextInput
-        style={styles.instructionsInput}
-        placeholder="Add any special instructions for the delivery"
-        multiline
-        numberOfLines={4}
-      />
-    </View>
-  );
-
-  const renderStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return renderPickupLocation();
-      case 2:
-        return renderDeliveryLocation();
-      case 3:
-        return renderPackageDetails();
-      case 4:
-        return renderDeliveryPreferences();
-      default:
-        return null;
-    }
-  };
-
+  const packageTypes = ["Food", "Documents", "Electronics", "Other"];
+  const weightOptions = ["Up to 5 kg", "5-10 kg", "10-15 kg", "15-20 kg"];
+  
+  // Add state variables
+  const [selectedPackage, setSelectedPackage] = useState('');
+  const [selectedWeight, setSelectedWeight] = useState('');
+  const [hasPickupDetails, setHasPickupDetails] = useState(false);
+  const [hasDropoffDetails, setHasDropoffDetails] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [DropcontactName, setDropContactName] = useState('');
+  const [DropcontactNumber, setDropContactNumber] = useState('');
+  const [currentDateTime] = useState(new Date().toLocaleString());
+  
+  // Check if all fields are filled
+  const isFormComplete = selectedPackage && selectedWeight && hasPickupDetails && hasDropoffDetails;
+  
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Book Delivery</Text>
+        <Text style={styles.headerText}>Create Order</Text>
+        <View style={styles.locationContainer}>
+          <Text>Current Location</Text>
+        </View>
       </View>
+      <Text style={styles.dateTimeText}>{currentDateTime}</Text>
+      {/* Pickup Details Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Pickup Details</Text>
+        
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Contact Name</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Enter contact name"
+            value={contactName}
+            onChangeText={setContactName}
+          />
+        </View>
+        
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Contact Number</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Enter contact number"
+            value={contactNumber}
+            onChangeText={setContactNumber}
+            keyboardType="phone-pad"
+          />
+        </View>
 
-      {renderStepIndicator()}
-
-      <ScrollView style={styles.content}>{renderStepContent()}</ScrollView>
-
-      <View style={styles.footer}>
-        {currentStep > 1 && (
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => setCurrentStep((prev) => prev - 1)}>
-            <Text style={styles.backButtonText}>Back</Text>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.addButton}>
+            <Text style={styles.buttonText}>+ Add</Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          style={styles.continueButton}
-          onPress={() =>
-            currentStep < 4
-              ? setCurrentStep((prev) => prev + 1)
-              : console.log('Complete booking')
-          }>
-          <Text style={styles.continueButtonText}>
-            {currentStep === 4 ? 'Complete Booking' : 'Continue'}
-          </Text>
+          
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.optionButton}>
+              <Text style={styles.buttonText}>Current</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.optionButton}>
+              <Text style={styles.buttonText}>Map</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+{/* Drop-off Details Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Drop-off Details</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Contact Name</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Enter contact name"
+            value={DropcontactName}
+            onChangeText={setDropContactName}
+          />
+        </View>
+        
+        <View style={styles.inputContainer}>
+          <Text style={styles.inputLabel}>Contact Number</Text>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Enter contact number"
+            value={DropcontactNumber}
+            onChangeText={setDropContactNumber}
+            keyboardType="phone-pad"
+          />
+        </View>
+        
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={[styles.optionButton, { flex: 1 }]}>
+            <Text style={styles.buttonText}>+ Add Address</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.optionButton, { flex: 1 }]}>
+            <Text style={styles.buttonText}>Open Map</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.addButton}>
+          <Text style={styles.buttonText}>+ Add Another Drop-off</Text>
         </TouchableOpacity>
       </View>
-    </View>
+{/* Package Details Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Package Details</Text>
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Package Type</Text>
+          <Picker
+            selectedValue={selectedPackage}
+            style={[styles.picker, styles.pickerBorder]}
+            onValueChange={(itemValue) => {
+              setSelectedPackage(itemValue);
+            }}>
+            <Picker.Item label="Select package type" value="" />
+            {packageTypes.map((type) => (
+              <Picker.Item key={type} label={type} value={type} />
+            ))}
+          </Picker>
+        </View>
+        <View style={styles.pickerContainer}>
+          <Text style={styles.pickerLabel}>Weight</Text>
+          <Picker
+            selectedValue={selectedWeight}
+            style={[styles.picker, styles.pickerBorder]}
+            onValueChange={(itemValue) => {
+              setSelectedWeight(itemValue);
+            }}>
+            <Picker.Item label="Select weight" value="" />
+            {weightOptions.map((weight) => (
+              <Picker.Item key={weight} label={weight} value={weight} />
+            ))}
+          </Picker>
+        </View>
+        // Replace the Show Amount button code with this
+        <TouchableOpacity 
+          style={[styles.showAmountButton, styles.enabledButton]}
+          onPress={() => {
+            router.push('/payment-details');
+          }}
+        >
+          <Text style={styles.enabledButtonText}>Show Amount</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8FBFF',
+    padding: 20,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginBottom: 25,
+    marginTop: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 5,
   },
-  headerTitle: {
-    fontSize: 24,
+  headerText: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    paddingVertical: 10,
   },
-  stepIndicator: {
-    flexDirection: 'row',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-  },
-  stepContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  stepDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  locationContainer: {
     backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 10,
+    borderRadius: 20,
+    marginRight: 5,
   },
-  activeStepDot: {
-    backgroundColor: '#007AFF',
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-  },
-  activeStepNumber: {
-    color: '#fff',
-  },
-  stepLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: '#f5f5f5',
-    marginHorizontal: 4,
-  },
-  content: {
-    flex: 1,
-  },
-  stepContent: {
-    padding: 16,
-  },
-  mapPlaceholder: {
-    height: 200,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  mapText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  addressInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-  },
-  addressInput: {
-    flex: 1,
-    marginLeft: 8,
-    fontSize: 16,
-  },
-  currentLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-  },
-  currentLocationText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#007AFF',
-  },
-  saveAddressButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-  },
-  saveAddressText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#007AFF',
+  section: {
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 10,
+    backgroundColor: '#FFF3E0',
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 12,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    paddingHorizontal: 15,
   },
-  sizeSelector: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  sizeOption: {
-    flex: 1,
-    marginHorizontal: 4,
+  addButton: {
     padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+    marginVertical: 8,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginHorizontal: 5,
     alignItems: 'center',
   },
-  selectedSize: {
-    backgroundColor: '#007AFF',
-  },
-  sizeLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  selectedSizeLabel: {
-    color: '#fff',
-  },
-  sizeDesc: {
-    fontSize: 12,
-    color: '#666',
-  },
-  selectedSizeDesc: {
-    color: '#fff',
-  },
-  weightInput: {
+  buttonRow: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 15,
+    marginBottom: 5,
+    paddingHorizontal: 20,
+  },
+  optionButton: {
+    padding: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    minWidth: 130,
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+    marginHorizontal: 5,
+    right: 15,
+  },
+  mapButton: {
     padding: 12,
-    marginBottom: 24,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+    marginHorizontal: 5,
   },
-  weightValue: {
-    flex: 1,
-    fontSize: 16,
-  },
-  weightUnit: {
-    fontSize: 16,
-    color: '#666',
-  },
-  descriptionInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+  pickerContainer: {
+    backgroundColor: '#fff',
     padding: 12,
-    height: 100,
-    marginBottom: 24,
-    textAlignVertical: 'top',
+    borderRadius: 8,
+    marginBottom: 18,
+    marginHorizontal: 5,
   },
-  uploadButton: {
-    flexDirection: 'row',
+  pickerLabel: {
+    fontSize: 14,
+    color: '#333',
+    paddingHorizontal: 10,
+  },
+  picker: {
+    height: 60,
+    marginTop: 8,
+  },
+  pickerBorder: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    marginHorizontal: 5,
+  },
+  showAmountButton: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 15,
+    marginHorizontal: 5,
+  },
+  enabledButton: {
+    backgroundColor: '#1E88E5',
+  },
+  disabledButton: {
+    backgroundColor: '#F0F0F0',
+  },
+  enabledButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  disabledButtonText: {
+    color: '#FFA726',
+    fontWeight: '600',
+  },
+  inputContainer: {
+    marginBottom: 15,
+    marginHorizontal: 5,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0052CC',
+    marginBottom: 8,
+    paddingHorizontal: 5,
+  },
+  textInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#1E88E5',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#333',
+  },
+  buttonContainer: {
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#1E88E5',
+    fontSize: 14,
+    fontWeight: '600',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
   },
-  uploadText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#007AFF',
-  },
-  timeSlotContainer: {
+  orderInfoContainer: {
     flexDirection: 'row',
-    marginBottom: 24,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 15,
   },
-  timeSlot: {
-    flex: 1,
-    marginHorizontal: 4,
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#f5f5f5',
+  orderInfo: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  selectedTimeSlot: {
-    backgroundColor: '#007AFF',
-  },
-  timeSlotText: {
-    fontSize: 16,
+  orderInfoLabel: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#0052CC',
+    marginRight: 5,
+  },
+  orderInfoText: {
+    fontSize: 14,
     color: '#333',
-    marginBottom: 4,
   },
-  selectedTimeSlotText: {
-    color: '#fff',
-  },
-  timeSlotSubtext: {
+  dateTimeText: {
     fontSize: 12,
     color: '#666',
-  },
-  instructionsInput: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 12,
-    height: 100,
-    marginBottom: 24,
-    textAlignVertical: 'top',
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  backButton: {
-    flex: 1,
-    paddingVertical: 16,
-    marginRight: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#007AFF',
-    textAlign: 'center',
-  },
-  continueButton: {
-    flex: 2,
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  continueButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    textAlign: 'right',
+    marginBottom: 10,
   },
 });
