@@ -99,7 +99,12 @@ export default function PaymentDetails() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.createOrderButton}>
+      <TouchableOpacity 
+        style={styles.createOrderButton}
+        onPress={() => {
+          router.push('/confirm-order');
+        }}
+      >
         <Text style={styles.createOrderText}>Create Order</Text>
       </TouchableOpacity>
     </ScrollView>
