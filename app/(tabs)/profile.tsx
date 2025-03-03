@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/auth';
+import { Switch } from 'react-native';
 
 const PAYMENT_METHODS = [
   { id: 1, type: 'card', last4: '4242', brand: 'visa' },
@@ -35,296 +36,274 @@ const RECENT_ORDERS = [
 
 export default function Profile() {
   const { user, signOut } = useAuth();
+  const [pushEnabled, setPushEnabled] = React.useState(true);
+  const [emailEnabled, setEmailEnabled] = React.useState(false);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>Profile Settings</Text>
+        <TouchableOpacity>
+          <Ionicons name="ellipsis-vertical" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
 
-      {/* User Info */}
-      <View style={styles.userCard}>
-        <Image
-          source={{
-            uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-          }}
-          style={styles.userImage}
-        />
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{user?.name}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+      <View style={styles.profileSection}>
+        <View style={styles.profileHeader}>
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+            }}
+            style={styles.profileImage}
+          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>Michael Anderson</Text>
+            <Text style={styles.profileEmail}>michael.a@example.com</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Payment Methods */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Payment Methods</Text>
-          <TouchableOpacity>
-            <Text style={styles.addButton}>+ Add New</Text>
-          </TouchableOpacity>
+        <View style={styles.contactSection}>
+          <Text style={styles.sectionLabel}>Contact Details</Text>
+          <View style={styles.contactRow}>
+            <Text style={styles.contactLabel}>+1 (555) 123-4567</Text>
+            <TouchableOpacity>
+              <Text style={styles.changeButton}>Change</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.contactRow}>
+            <Text style={styles.contactLabel}>123 Market Street, San Francisco, CA-123</Text>
+            <TouchableOpacity>
+              <Text style={styles.editButton}>Edit</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        {PAYMENT_METHODS.map((method) => (
-          <TouchableOpacity key={method.id} style={styles.paymentMethod}>
-            <View style={styles.paymentIcon}>
-              <Ionicons
-                name={
-                  method.type === 'card'
-                    ? 'card'
-                    : method.type === 'wallet'
-                    ? 'wallet'
-                    : 'phone-portrait'
-                }
-                size={24}
-                color="#007AFF"
-              />
-            </View>
-            <View style={styles.paymentInfo}>
-              <Text style={styles.paymentTitle}>
-                {method.type === 'card'
-                  ? `•••• ${method.last4}`
-                  : method.type === 'wallet'
-                  ? method.name
-                  : method.upiId}
-              </Text>
-              <Text style={styles.paymentSubtext}>
-                {method.type === 'card'
-                  ? 'Credit Card'
-                  : method.type === 'wallet'
-                  ? 'Digital Wallet'
-                  : 'UPI'}
-              </Text>
+
+        <View style={styles.notificationSection}>
+          <Text style={styles.sectionLabel}>Notifications</Text>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Push Notifications</Text>
+            <Switch 
+              value={pushEnabled} 
+              onValueChange={setPushEnabled}
+              trackColor={{ false: '#767577', true: '#007AFF' }}
+            />
+          </View>
+          <View style={styles.toggleRow}>
+            <Text style={styles.toggleLabel}>Email Notifications</Text>
+            <Switch 
+              value={emailEnabled}
+              onValueChange={setEmailEnabled}
+              trackColor={{ false: '#767577', true: '#007AFF' }}
+            />
+          </View>
+        </View>
+
+        <View style={styles.menuSection}>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="help-circle-outline" size={24} color="#666" />
+              <Text style={styles.menuText}>Help & Support</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
-        ))}
-      </View>
 
-      {/* Recent Orders */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
-          <TouchableOpacity>
-            <Text style={styles.viewAllButton}>View All</Text>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="person-outline" size={24} color="#666" />
+              <Text style={styles.menuText}>Edit Profile</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="document-text-outline" size={24} color="#666" />
+              <Text style={styles.menuText}>Terms & Conditions</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={styles.menuLeft}>
+              <Ionicons name="information-circle-outline" size={24} color="#666" />
+              <Text style={styles.menuText}>About Us</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
         </View>
-        {RECENT_ORDERS.map((order) => (
-          <TouchableOpacity key={order.id} style={styles.orderItem}>
-            <View style={styles.orderIcon}>
-              <Ionicons
-                name={order.type === 'Document' ? 'document' : 'cube'}
-                size={24}
-                color="#007AFF"
-              />
-            </View>
-            <View style={styles.orderInfo}>
-              <Text style={styles.orderTitle}>{order.type}</Text>
-              <Text style={styles.orderDate}>{order.date}</Text>
-            </View>
-            <View style={styles.orderStatus}>
-              <Text style={styles.orderStatusText}>{order.status}</Text>
-              <Text style={styles.orderAmount}>${order.amount}</Text>
-            </View>
+
+        <View style={styles.recentOrdersSection}>
+          <Text style={styles.sectionLabel}>Recent Orders</Text>
+          <TouchableOpacity style={styles.orderItem}>
+            <Text style={styles.orderNumber}>Order #8556</Text>
+            <Text style={styles.orderDate}>Delivered on May 15, 2024</Text>
+            <Text style={styles.orderAmount}>$45.00</Text>
+            <Text style={styles.orderStatus}>Delivered</Text>
           </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Settings */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.settingItem}>
-          <Ionicons name="notifications" size={24} color="#007AFF" />
-          <Text style={styles.settingText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Ionicons name="location" size={24} color="#007AFF" />
-          <Text style={styles.settingText}>Saved Addresses</Text>
-          <Ionicons name="chevron-forward" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingItem}>
-          <Ionicons name="help-circle" size={24} color="#007AFF" />
-          <Text style={styles.settingText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={20} color="#666" />
+          <TouchableOpacity style={styles.orderItem}>
+            <Text style={styles.orderNumber}>Order #8557</Text>
+            <Text style={styles.orderDate}>Expected by May 18, 2024</Text>
+            <Text style={styles.orderAmount}>$85.00</Text>
+            <Text style={[styles.orderStatus, { color: '#FF6B00' }]}>In Progress</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity 
+          style={styles.logoutButton}
+          onPress={signOut}
+        >
+          <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
+          <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.signOutButton} onPress={signOut}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
 
+// Add these new styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  userImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
-  },
-  editButton: {
-    alignSelf: 'flex-start',
-  },
-  editButtonText: {
-    fontSize: 14,
-    color: '#007AFF',
-  },
-  section: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 60,
     paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingBottom: 16,
+    backgroundColor: '#fff',
   },
-  sectionTitle: {
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
   },
-  addButton: {
-    fontSize: 14,
-    color: '#007AFF',
+  profileSection: {
+    padding: 16,
   },
-  viewAllButton: {
-    fontSize: 14,
-    color: '#007AFF',
-  },
-  paymentMethod: {
+  profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    marginBottom: 24,
   },
-  paymentIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
+  profileImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     marginRight: 12,
   },
-  paymentInfo: {
+  profileInfo: {
     flex: 1,
   },
-  paymentTitle: {
+  profileName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
     marginBottom: 4,
   },
-  paymentSubtext: {
+  profileEmail: {
     fontSize: 14,
     color: '#666',
   },
-  orderItem: {
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  contactSection: {
+    marginBottom: 24,
+  },
+  contactRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  contactLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
+  },
+  changeButton: {
+    fontSize: 14,
+    color: '#007AFF',
+  },
+  editButton: {
+    fontSize: 14,
+    color: '#007AFF',
+  },
+  notificationSection: {
+    marginBottom: 24,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  toggleLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  menuSection: {
+    marginBottom: 24,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
   },
-  orderIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+  menuLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
   },
-  orderInfo: {
-    flex: 1,
-  },
-  orderTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+  menuText: {
+    fontSize: 14,
+    marginLeft: 12,
     color: '#333',
+  },
+  recentOrdersSection: {
+    marginBottom: 24,
+  },
+  orderItem: {
+    padding: 12,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  orderNumber: {
+    fontSize: 14,
+    fontWeight: '600',
     marginBottom: 4,
   },
   orderDate: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
-  },
-  orderStatus: {
-    alignItems: 'flex-end',
-  },
-  orderStatusText: {
-    fontSize: 14,
-    color: '#34C759',
     marginBottom: 4,
   },
   orderAmount: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    marginBottom: 4,
   },
-  settingItem: {
+  orderStatus: {
+    fontSize: 12,
+    color: '#34C759',
+  },
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-  },
-  settingText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
-  },
-  signOutButton: {
-    margin: 16,
+    justifyContent: 'center',
+    backgroundColor: '#FEE2E2',
     padding: 16,
-    backgroundColor: '#ff3b30',
-    borderRadius: 12,
-    alignItems: 'center',
+    borderRadius: 8,
+    marginTop: 24,
+    marginBottom: 32,
   },
-  signOutText: {
+  logoutText: {
+    color: '#FF3B30',
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    marginLeft: 8,
   },
 });
