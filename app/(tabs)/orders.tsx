@@ -1,104 +1,156 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-const DELIVERY_STEPS = [
-  { id: 1, title: 'Order Placed', time: '10:30 AM', completed: true },
-  { id: 2, title: 'Picked Up', time: '11:15 AM', completed: true },
-  { id: 3, title: 'Out for Delivery', time: '11:45 AM', completed: true },
-  { id: 4, title: 'Delivered', time: '- -:- -', completed: false },
+const ORDERS = [
+  {
+    id: 'FX8Z749US',
+    from: 'London, UK',
+    status: 'Pickup',
+    date: 'Dec 8, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX123456780',
+    from: 'London, UK',
+    status: 'Progress',
+    date: 'Dec 8, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX8Z749US',
+    from: 'London, UK',
+    status: 'Delivered',
+    date: 'Dec 8, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX8Z749US',
+    from: 'London, UK',
+    status: 'cancel',
+    date: 'Dec 8, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX9876543',
+    from: 'Paris, FR',
+    status: 'Progress',
+    date: 'Dec 9, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX5432198',
+    from: 'Berlin, DE',
+    status: 'Pickup',
+    date: 'Dec 9, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX7654321',
+    from: 'Madrid, ES',
+    status: 'Delivered',
+    date: 'Dec 7, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  },
+  {
+    id: 'FX2468135',
+    from: 'Rome, IT',
+    status: 'cancel',
+    date: 'Dec 6, 2023',
+    steps: ['Order Placed', 'Pickup', 'Delivered']
+  }
 ];
 
 export default function Orders() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Track Order</Text>
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pickup': return '#FFB800';
+      case 'progress': return '#FF6B00';
+      case 'delivered': return '#00C853';
+      case 'cancel': return '#FF0000';
+      default: return '#666666';
+    }
+  };
+  
+  const getProgressWidth = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pickup': return '33%';
+      case 'progress': return '66%';
+      case 'delivered': return '100%';
+      case 'cancel': return '100%';
+      default: return '0%';
+    }
+  };
+  
+  const renderProgressOrStatus = (status: string) => {
+    if (status.toLowerCase() === 'cancel') {
+      return (
+        <View style={styles.deliveredContainer}>
+          <Ionicons name="close-circle" size={20} color="#FF0000" />
+          <Text style={styles.canceldeliveredText}>Package cancelled</Text>
+        </View>
+      )
+    }
+    
+    if (status.toLowerCase() === 'delivered') {
+      return (
+        <View style={styles.deliveredContainer}>
+          <Ionicons name="checkmark-circle" size={20} color="#00C853" />
+          <Text style={styles.deliveredText}>Package delivered successfully</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBar, { width: getProgressWidth(status) }]} />
       </View>
+    );
+  };
 
-      <ScrollView style={styles.content}>
-        <View style={styles.mapContainer}>
-          <View style={styles.mapPlaceholder}>
-            <Text style={styles.mapText}>Live Tracking Map</Text>
-          </View>
-          <View style={styles.etaCard}>
-            <Text style={styles.etaTitle}>Estimated Arrival</Text>
-            <Text style={styles.etaTime}>12:30 PM</Text>
-            <Text style={styles.etaSubtext}>Driver is 2.5 km away</Text>
-          </View>
-        </View>
-        <View style={styles.statusContainer}>
-          {DELIVERY_STEPS.map((step, index) => (
-            <View key={step.id} style={styles.statusStep}>
-              <View style={styles.stepIndicator}>
-                <View
-                  style={[
-                    styles.stepDot,
-                    step.completed && styles.completedStepDot,
-                  ]}>
-                  {step.completed && (
-                    <Ionicons name="checkmark" size={16} color="#fff" />
-                  )}
-                </View>
-                {index < DELIVERY_STEPS.length - 1 && (
-                  <View
-                    style={[
-                      styles.stepLine,
-                      step.completed && styles.completedStepLine,
-                    ]}
-                  />
-                )}
-              </View>
-              <View style={styles.stepContent}>
-                <Text style={styles.stepTitle}>{step.title}</Text>
-                <Text style={styles.stepTime}>{step.time}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Driver Info */}
-        <View style={styles.driverCard}>
-          <View style={styles.driverInfo}>
-            <Image
-              source={{
-                uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-              }}
-              style={styles.driverImage}
-            />
-            <View style={styles.driverDetails}>
-              <Text style={styles.driverName}>John Smith</Text>
-              <Text style={styles.driverRating}>⭐ 4.9 (2.5k deliveries)</Text>
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Track & Status</Text>
+      </View>
+  
+      {ORDERS.map((order, index) => (
+        <TouchableOpacity 
+          key={index}
+          style={styles.orderCard}
+          onPress={() => {
+            const status = order.status.toLowerCase();
+            if (status === 'pickup' || status === 'progress') {
+              router.push('/rider-details');
+            } else {
+              router.push('/cancel-order');
+            }
+          }}
+        >
+          <View style={styles.orderHeader}>
+            <Text style={styles.packageId}>Package #{order.id}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
+              <Text style={styles.statusText}>{order.status}</Text>
             </View>
           </View>
-          <View style={styles.driverActions}>
-            <TouchableOpacity style={styles .driverButton}>
-              <Ionicons name="call" size={24} color="#007AFF" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.driverButton}>
-              <Ionicons name="chatbubble" size={24} color="#007AFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Order Actions */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.cancelButton}>
-            <Text style={styles.cancelButtonText}>Cancel Order</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Details</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </View>
+          <Text style={styles.fromText}>From: {order.from}</Text>
+          
+          {renderProgressOrStatus(order.status)}
+          {!['delivered', 'cancel'].includes(order.status.toLowerCase()) && (
+            <View style={styles.progressContainer}>
+              {order.steps.map((step, idx) => (
+                <React.Fragment key={idx}>
+                  <Text style={styles.stepText}>{step}</Text>
+                </React.Fragment>
+              ))}
+            </View>
+          )}
+          <Text style={styles.dateText}>{order.date}</Text>
+          
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
   );
 }
 
@@ -112,184 +164,92 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingHorizontal: 16,
     backgroundColor: '#fff',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#000',
+  },
+  orderCard: {
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  content: {
-    flex: 1,
-  },
-  mapContainer: {
-    padding: 16,
-  },
-  mapPlaceholder: {
-    height: 200,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  mapText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  etaCard: {
-    position: 'absolute',
-    bottom: 32,
-    left: 32,
-    right: 32,
-    top:32,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  etaTitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
-  },
-  etaTime: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  etaSubtext: {
-    fontSize: 14,
-    color: '#666',
-  },
-  statusContainer: {
-    padding: 16,
-  },
-  statusStep: {
+  orderHeader: {
     flexDirection: 'row',
-    marginBottom: 24,
-  },
-  stepIndicator: {
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: 16,
+    marginBottom: 8,
   },
-  stepDot: {
-    width: 24,
-    height: 24,
+  packageId: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#000',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 12,
-    backgroundColor: '#f5f5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  completedStepDot: {
-    backgroundColor: '#34C759',
+  statusText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
-  stepLine: {
-    width: 2,
-    height: 40,
-    backgroundColor: '#f5f5f5',
-    marginVertical: 4,
-  },
-  completedStepLine: {
-    backgroundColor: '#34C759',
-  },
-  stepContent: {
-    flex: 1,
-  },
-  stepTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  stepTime: {
-    fontSize: 14,
+  fromText: {
+    fontSize: 13,
     color: '#666',
+    marginBottom: 12,
   },
-  driverCard: {
-    margin: 16,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingVertical: 8,
   },
-  driverInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  stepText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '700',
   },
-  driverImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  driverDetails: {
+  progressLine: {
     flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: 8,
   },
-  driverName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  driverRating: {
-    fontSize: 14,
+  dateText: {
+    fontSize: 12,
     color: '#666',
   },
-  driverActions: {
+  progressBarContainer: {
+    height: 2,
+    backgroundColor: '#E0E0E0',
+    marginBottom: 8,
+    borderRadius: 1,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 1,
+  },
+  deliveredContainer: {
     flexDirection: 'row',
-    gap:5
-  },
-  driverButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#f5f5f5',
     alignItems: 'center',
-    justifyContent: 'center',
-    right:80,
+    marginBottom: 8,
+    paddingVertical: 4,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingTop: 0,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#ff3b30',
-    borderRadius: 12,
-    padding: 16,
-    marginRight: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  editButton: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 16,
+  deliveredText: {
     marginLeft: 8,
-    alignItems: 'center',
+    fontSize: 12,
+    color: '#00C853',
+    fontWeight: '500',
   },
-  editButtonText: {
-    color: '#007AFF',
-    fontSize: 16,
-    fontWeight: '600',
+  canceldeliveredText: {
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#E20C0C',
+    fontWeight: '500',
   },
 });
