@@ -106,7 +106,7 @@ export default function ConfirmOrder() {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.cancelButton}
-            onPress={() => router.push('/dashboard')}
+            onPress={() => router.push('/cancel-order')}
           >
             <Text style={styles.cancelButtonText}>Cancel Order</Text>
           </TouchableOpacity>
