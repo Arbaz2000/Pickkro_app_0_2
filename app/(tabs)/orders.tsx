@@ -140,6 +140,13 @@ export default function Orders() {
                   orderId: order.id
                 }
               });
+            } else if (status === 'completed') {
+              router.push({
+                pathname: '/completed-order-details',
+                params: { 
+                  orderId: order.id
+                }
+              });
             } else {
               router.push('/cancel-order-details');
             }          }}
