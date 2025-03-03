@@ -2,9 +2,26 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
 
 export default function RiderDetails() {
+  // Add this at the beginning of the component
+  const route = useLocalSearchParams();
+  const status = route.status || 'Progress'; // Default to Progress if not provided
+
+  // Add this function to determine timeline status
+  const getTimelineStatus = (currentStep: string, orderStatus: string) => {
+    if (orderStatus.toLowerCase() === 'progress') {
+      return currentStep === 'Order Placed';
+    } else if (orderStatus.toLowerCase() === 'pickup') {
+      return ['Order Placed', 'Picked Up'].includes(currentStep);
+    } else if (orderStatus.toLowerCase() === 'delivered') {
+      return true; // All steps complete
+    }
+    return false;
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -109,28 +126,48 @@ export default function RiderDetails() {
           <Text style={styles.statusTitle}>Delivery Status</Text>
           <View style={styles.timeline}>
             <View style={styles.timelineItem}>
-              <View style={styles.timelineDot} />
+              <View style={[styles.timelineDot, getTimelineStatus('Order Placed', status as string) && styles.activeDot]} />
               <View style={styles.timelineContent}>
-                <Text style={styles.statusLabel}>Order Placed</Text>
-                <Text style={styles.statusTime}>Oct 15, 2:30 PM</Text>
+                <Text style={[styles.statusLabel, getTimelineStatus('Order Placed', status as string) && styles.activeLabel]}>
+                  Order Placed
+                </Text>
+                <Text style={[styles.statusTime, getTimelineStatus('Order Placed', status as string) && styles.activeTime]}>
+                  Oct 15, 2:30 PM
+                </Text>
               </View>
             </View>
-            <View style={styles.timelineConnector} />
+            <View style={[styles.timelineConnector, { 
+              backgroundColor: getTimelineStatus('Picked Up', status as string) ? '#34C759' : '#e0e0e0' 
+            }]} />
             
             <View style={styles.timelineItem}>
-              <View style={styles.timelineDot} />
+              <View style={[styles.timelineDot, { 
+                backgroundColor: getTimelineStatus('Picked Up', status as string) ? '#34C759' : '#e0e0e0' 
+              }]} />
               <View style={styles.timelineContent}>
-                <Text style={styles.statusLabel}>Picked Up</Text>
-                <Text style={styles.statusTime}>Oct 15, 2:45 PM</Text>
+                <Text style={[styles.statusLabel, getTimelineStatus('Picked Up', status as string) && styles.activeLabel]}>
+                  Picked Up
+                </Text>
+                <Text style={[styles.statusTime, getTimelineStatus('Picked Up', status as string) && styles.activeTime]}>
+                  {getTimelineStatus('Picked Up', status as string) ? 'Oct 15, 2:45 PM' : 'Pending'}
+                </Text>
               </View>
             </View>
-            <View style={styles.timelineConnector} />
+            <View style={[styles.timelineConnector, { 
+              backgroundColor: getTimelineStatus('Delivered', status as string) ? '#34C759' : '#e0e0e0' 
+            }]} />
             
             <View style={styles.timelineItem}>
-              <View style={[styles.timelineDot, styles.activeDot]} />
+              <View style={[styles.timelineDot, { 
+                backgroundColor: getTimelineStatus('Delivered', status as string) ? '#34C759' : '#e0e0e0' 
+              }]} />
               <View style={styles.timelineContent}>
-                <Text style={[styles.statusLabel, styles.activeLabel]}>Delivered</Text>
-                <Text style={[styles.statusTime, styles.activeTime]}>Estimated: Oct 15, 3:30 PM</Text>
+                <Text style={[styles.statusLabel, getTimelineStatus('Delivered', status as string) && styles.activeLabel]}>
+                  Delivered
+                </Text>
+                <Text style={[styles.statusTime, getTimelineStatus('Delivered', status as string) && styles.activeTime]}>
+                  {getTimelineStatus('Delivered', status as string) ? 'Oct 15, 3:30 PM' : 'Pending'}
+                </Text>
               </View>
             </View>
           </View>

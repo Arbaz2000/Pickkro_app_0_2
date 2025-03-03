@@ -21,7 +21,7 @@ const ORDERS = [
   {
     id: 'FX8Z749US',
     from: 'London, UK',
-    status: 'Delivered',
+    status: 'Completed',
     date: 'Dec 8, 2023',
     steps: ['Order Placed', 'Pickup', 'Delivered']
   },
@@ -68,6 +68,7 @@ export default function Orders() {
       case 'pickup': return '#FFB800';
       case 'progress': return '#FF6B00';
       case 'delivered': return '#00C853';
+      case 'completed': return '#007AFF';
       case 'cancel': return '#FF0000';
       default: return '#666666';
     }
@@ -75,9 +76,10 @@ export default function Orders() {
   
   const getProgressWidth = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pickup': return '33%';
-      case 'progress': return '66%';
+      case 'pickup': return '66%';
+      case 'progress': return '33%';
       case 'delivered': return '100%';
+      case 'completed': return '100%';
       case 'cancel': return '100%';
       default: return '0%';
     }
@@ -102,6 +104,15 @@ export default function Orders() {
       );
     }
 
+    if (status.toLowerCase() === 'completed') {
+      return (
+        <View style={styles.deliveredContainer}>
+          <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+          <Text style={[styles.deliveredText, { color: '#007AFF' }]}>Order completed successfully</Text>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.progressBarContainer}>
         <View style={[styles.progressBar, { width: getProgressWidth(status) }]} />
@@ -121,12 +132,17 @@ export default function Orders() {
           style={styles.orderCard}
           onPress={() => {
             const status = order.status.toLowerCase();
-            if (status === 'pickup' || status === 'progress') {
-              router.push('/rider-details');
+            if (status === 'pickup' || status === 'progress' || status === 'delivered') {
+              router.push({
+                pathname: '/rider-details',
+                params: { 
+                  status: order.status,
+                  orderId: order.id
+                }
+              });
             } else {
-              router.push('/cancel-order');
-            }
-          }}
+              router.push('/cancel-order-details');
+            }          }}
         >
           <View style={styles.orderHeader}>
             <Text style={styles.packageId}>Package #{order.id}</Text>
@@ -137,7 +153,7 @@ export default function Orders() {
           <Text style={styles.fromText}>From: {order.from}</Text>
           
           {renderProgressOrStatus(order.status)}
-          {!['delivered', 'cancel'].includes(order.status.toLowerCase()) && (
+          {!['delivered', 'cancel', 'completed'].includes(order.status.toLowerCase()) && (
             <View style={styles.progressContainer}>
               {order.steps.map((step, idx) => (
                 <React.Fragment key={idx}>
