@@ -33,6 +33,7 @@
     },
     "android": {
       "package": "com.arbazkhan007.boltexponativewind"
-    }
+    },
+    "owner": "arbazkhan007"
   }
 }
