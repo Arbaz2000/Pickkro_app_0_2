@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
 
 export default function RiderDetails() {
   // Add this at the beginning of the component
@@ -95,23 +94,19 @@ export default function RiderDetails() {
         </View>
 
         <View style={styles.mapContainer}>
-          <MapView
+        <Image
+            source={require('../assets/images/map.png')}
             style={styles.map}
-            initialRegion={{
-              latitude: 28.6139,  // Delhi coordinates
-              longitude: 77.2090,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          >
-            <Marker
+            resizeMode="cover"
+          />
+            {/* <Marker
               coordinate={{
                 latitude: 28.6139,
                 longitude: 77.2090,
               }}
               title="Current Location"
             />
-          </MapView>
+          </MapView> */}
         </View>
 
         <View style={styles.paymentSection}>

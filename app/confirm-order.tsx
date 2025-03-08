@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Modal, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import MapView from 'react-native-maps';
+// Remove MapView import since we won't use it anymore
 
 export default function ConfirmOrder() {
   const [selectedPayment, setSelectedPayment] = React.useState('cash');
@@ -18,14 +18,10 @@ export default function ConfirmOrder() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <Image
+        source={require('../assets/images/map.png')}
         style={styles.map}
-        initialRegion={{
-          latitude: 28.6139,  // New Delhi coordinates
-          longitude: 77.2090,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        resizeMode="cover"
       />
       
       <View style={styles.orderCard}>
