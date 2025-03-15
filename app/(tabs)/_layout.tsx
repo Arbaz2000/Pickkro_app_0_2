@@ -27,21 +27,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="book"
-        options={{
-          title: 'Book',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle" size={size} color={color} />
-          ),
-        }}
-      />
-
-      <Tabs.Screen
         name="orders"
         options={{
           title: 'Orders',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="cube" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="support"
+        options={{
+          title: 'Support',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="help-circle" size={size} color={color} />
           ),
         }}
       />

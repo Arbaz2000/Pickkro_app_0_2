@@ -10,7 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import PriceCalculator from '@/components/PriceCalculator';
 
 const QUICK_ACTIONS = [
@@ -158,7 +158,10 @@ export default function Dashboard() {
             <Ionicons name="calculator" size={24} color="#007AFF" />
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.calculatorCard}>
+        <TouchableOpacity 
+          style={styles.calculatorCard}
+          onPress={() => router.push('/book')}
+        >
           <Text style={styles.calculatorText}>2 Wheeler</Text>
           <View style={styles.calculatorIconContainer}>
             <Ionicons name="bicycle" size={24} color="#007AFF" />
