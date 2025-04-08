@@ -1,4 +1,4 @@
- import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,23 @@ import { z } from 'zod';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/auth';
+import { styles } from './styles/auth.styles';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  mobile: z.string()
+    .min(10, 'Mobile number must be at least 10 digits')
+    .max(10, 'Mobile number must be exactly 10 digits')
+    .regex(/^[6-9]\d{9}$/, 'Mobile number must start with 6-9 and contain exactly 10 digits'),
+  password: z.string().min(1, 'Password must be at least 6 characters'),
 });
 
 const registerSchema = loginSchema.extend({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  mobile: z.string().min(10, 'Invalid mobile number'),
+  name: z.string()
+    .min(2, 'Name must be at least 2 characters')
+    .regex(/^[a-zA-Z\s]*$/, 'Name can only contain letters and spaces'),
+  email: z.string()
+    .email('Invalid email address')
+    .min(1, 'Email is required'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -39,7 +47,7 @@ export default function Auth() {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { signIn, signUp, signInAsGuest, loading } = useAuth();
+  const { signIn, signUp, signInAsGuest, loading, showSnackbar } = useAuth();
 
   const handleSubmit = async () => {
     try {
@@ -47,7 +55,7 @@ export default function Auth() {
       
       if (mode === 'login') {
         const validated = loginSchema.parse(formData);
-        await signIn(validated.email, validated.password);
+        await signIn(validated.mobile, validated.password);
       } else {
         const validated = registerSchema.parse(formData);
         await signUp(validated);
@@ -61,6 +69,9 @@ export default function Auth() {
           }
         });
         setErrors(newErrors);
+        
+        // Show validation error in snackbar instead of Alert
+        showSnackbar('Please check your input and try again.', 'error');
       }
     }
   };
@@ -69,12 +80,28 @@ export default function Auth() {
     <View style={styles.container}>
       <Input
         label="Mobile Number"
-        placeholder="mobile number"
-        value={formData.email}
-        onChangeText={(text) => setFormData({ ...formData, email: text })}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={errors.email}
+        placeholder="Enter 10 digit mobile number"
+        value={formData.mobile}
+        onChangeText={(text) => {
+          // Only allow numbers
+          const numericText = text.replace(/[^0-9]/g, '');
+          // Limit to 10 digits
+          const truncatedText = numericText.slice(0, 10);
+          setFormData({ ...formData, mobile: truncatedText });
+          
+          // Real-time validation
+          try {
+            loginSchema.shape.mobile.parse(truncatedText);
+            setErrors(prev => ({ ...prev, mobile: undefined }));
+          } catch (error) {
+            if (error instanceof z.ZodError) {
+              setErrors(prev => ({ ...prev, mobile: error.errors[0].message }));
+            }
+          }
+        }}
+        keyboardType="phone-pad"
+        maxLength={10}
+        error={errors.mobile}
       />
   
       <Input
@@ -151,10 +178,27 @@ export default function Auth() {
   
       <Input
         label="Mobile Number"
-        placeholder="Enter your mobile number"
+        placeholder="Enter 10 digit mobile number"
         value={formData.mobile}
-        onChangeText={(text) => setFormData({ ...formData, mobile: text })}
+        onChangeText={(text) => {
+          // Only allow numbers
+          const numericText = text.replace(/[^0-9]/g, '');
+          // Limit to 10 digits
+          const truncatedText = numericText.slice(0, 10);
+          setFormData({ ...formData, mobile: truncatedText });
+          
+          // Real-time validation
+          try {
+            registerSchema.shape.mobile.parse(truncatedText);
+            setErrors(prev => ({ ...prev, mobile: undefined }));
+          } catch (error) {
+            if (error instanceof z.ZodError) {
+              setErrors(prev => ({ ...prev, mobile: error.errors[0].message }));
+            }
+          }
+        }}
         keyboardType="phone-pad"
+        maxLength={10}
         error={errors.mobile}
       />
   
@@ -238,128 +282,3 @@ export default function Auth() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e0e0e0',
-  },
-  dividerText: {
-    marginHorizontal: 10,
-    color: '#666',
-    fontSize: 14,
-  },
-  guestButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-  },
-  guestButtonText: {
-    color: '#007AFF',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: 150,
-    height: 80,
-    marginBottom: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: 60,
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-  },
-  rememberContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 15,
-  },
-  rememberMe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  forgotPassword: {
-    color: '#666',
-  },
-  submitButton: {
-    backgroundColor: '#FF6B00',
-    borderRadius: 5,
-    marginTop: 20,
-  },
-  signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  signupText: {
-    color: '#666',
-  },
-  signupLink: {
-    color: '#FF6B00',
-    fontWeight: 'bold',
-  },
-  termsContainer: {
-    marginTop: 20,
-    paddingHorizontal: 20,
-  },
-  termsText: {
-    textAlign: 'center',
-    color: '#666',
-    fontSize: 12,
-  },
-  termsLink: {
-    color: '#FF6B00',
-  },
-
-  inputTitle: {
-    fontSize: 14,
-    color: '#333',
-    marginBottom: 8,
-    marginTop: 16,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderWidth: 1,
-    borderColor: '#FF6B00',
-    borderRadius: 4,
-    marginRight: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    backgroundColor: '#FF6B00',
-    borderRadius: 2,
-  },
-  rememberMeStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rememberText: {
-    color: '#666',
-    fontSize: 14,
-  },
-});

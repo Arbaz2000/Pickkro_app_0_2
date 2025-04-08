@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
+import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import Animated, {
   FadeIn,
@@ -15,13 +15,19 @@ export function SplashScreen() {
   }, []);
 
   return (
-    <Animated.View
-      entering={FadeIn.duration(1000)}
-      exiting={FadeOut.duration(500)}
-      style={styles.container}>
-      <Image source={require('../assets/images/splash.png')} style={styles.Icon}/>
-      <Text style={styles.subtitle}>Welcome</Text>
-    </Animated.View>
+    <TouchableOpacity 
+      activeOpacity={1} 
+      onPress={() => router.navigate('/LanguageSelect')}
+      style={{flex: 1}}
+    >
+      <Animated.View
+        entering={FadeIn.duration(1000)}
+        exiting={FadeOut.duration(500)}
+        style={styles.container}>
+        <Image source={require('../assets/images/splash.png')} style={styles.Icon}/>
+        <Text style={styles.subtitle}>Welcome</Text>
+      </Animated.View>
+    </TouchableOpacity>
   );
 }
 
