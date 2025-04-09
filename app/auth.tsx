@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/auth';
+import { useUserStore } from '../store/userStore';
 import { styles } from './styles/auth.styles';
 
 const loginSchema = z.object({
@@ -48,30 +49,50 @@ export default function Auth() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { signIn, signUp, signInAsGuest, loading, showSnackbar } = useAuth();
+  const setPhoneNumber = useUserStore((state) => state.setPhoneNumber);
+  const phoneNumber = useUserStore((state) => state.phoneNumber);
+
+  // Add useEffect to log phone number changes
+  useEffect(() => {
+    if (phoneNumber) {
+      console.log('User phone number stored in Zustand:', phoneNumber);
+    }
+  }, [phoneNumber]);
 
   const handleSubmit = async () => {
     try {
       setErrors({});
       
       if (mode === 'login') {
-        const validated = loginSchema.parse(formData);
-        await signIn(validated.mobile, validated.password);
+        const validatedData = loginSchema.parse({
+          mobile: formData.mobile,
+          password: formData.password,
+        });
+        console.log('Attempting to login with phone:', validatedData.mobile);
+        await signIn(validatedData.mobile, validatedData.password);
+        console.log('Login successful, storing phone number in Zustand:', validatedData.mobile);
+        setPhoneNumber(validatedData.mobile);
+        console.log('Phone number stored in Zustand. Current value:', useUserStore.getState().phoneNumber);
       } else {
-        const validated = registerSchema.parse(formData);
-        await signUp(validated);
+        const validatedData = registerSchema.parse(formData);
+        console.log('Attempting to register with phone:', validatedData.mobile);
+        await signUp(validatedData);
+        console.log('Registration successful, storing phone number in Zustand:', validatedData.mobile);
+        setPhoneNumber(validatedData.mobile);
+        console.log('Phone number stored in Zustand. Current value:', useUserStore.getState().phoneNumber);
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
-          if (err.path[0]) {
+          if (err.path && err.path[0]) {
             newErrors[err.path[0].toString()] = err.message;
           }
         });
         setErrors(newErrors);
-        
-        // Show validation error in snackbar instead of Alert
         showSnackbar('Please check your input and try again.', 'error');
+      } else {
+        showSnackbar('An error occurred. Please try again.', 'error');
       }
     }
   };
@@ -91,8 +112,12 @@ export default function Auth() {
           
           // Real-time validation
           try {
-            loginSchema.shape.mobile.parse(truncatedText);
-            setErrors(prev => ({ ...prev, mobile: undefined }));
+            loginSchema.parse({ mobile: truncatedText });
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.mobile;
+              return newErrors;
+            });
           } catch (error) {
             if (error instanceof z.ZodError) {
               setErrors(prev => ({ ...prev, mobile: error.errors[0].message }));
@@ -189,8 +214,12 @@ export default function Auth() {
           
           // Real-time validation
           try {
-            registerSchema.shape.mobile.parse(truncatedText);
-            setErrors(prev => ({ ...prev, mobile: undefined }));
+            registerSchema.parse({ mobile: truncatedText });
+            setErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors.mobile;
+              return newErrors;
+            });
           } catch (error) {
             if (error instanceof z.ZodError) {
               setErrors(prev => ({ ...prev, mobile: error.errors[0].message }));
