@@ -1,6 +1,6 @@
 import 'react-native-get-random-values'; // Import the polyfill at the top
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail } from 'react-native-google-places-autocomplete';
 
 const PriceCalculator: React.FC = () => {
@@ -47,11 +47,14 @@ const PriceCalculator: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <View style={styles.contentContainer}>
         <Text style={styles.header}>Delivery starts from Rs 7/km</Text>
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { zIndex: 2 }]}>
           <GooglePlacesAutocomplete
             placeholder="Enter pickup location"
             onPress={(data, details) => handleLocationSelect(data, details, true)}
@@ -67,14 +70,15 @@ const PriceCalculator: React.FC = () => {
               row: styles.row,
             }}
             onFail={error => console.error(error)}
+            enablePoweredByContainer={false}
+            minLength={2}
             textInputProps={{
-              value: origin, // Bind the input value to state
-              onChangeText: text => setOrigin(text), // Update the state on text change
+              placeholderTextColor: '#666',
             }}
           />
         </View>
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { zIndex: 1 }]}>
           <GooglePlacesAutocomplete
             placeholder="Enter delivery location"
             onPress={(data, details) => handleLocationSelect(data, details, false)}
@@ -90,9 +94,10 @@ const PriceCalculator: React.FC = () => {
               row: styles.row,
             }}
             onFail={error => console.error(error)}
+            enablePoweredByContainer={false}
+            minLength={2}
             textInputProps={{
-              value: destination, // Bind the input value to state
-              onChangeText: text => setDestination(text), // Update the state on text change
+              placeholderTextColor: '#666',
             }}
           />
         </View>
@@ -116,18 +121,18 @@ const PriceCalculator: React.FC = () => {
           </View>
         )}
       </View>
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#f9f9f9',
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 16,
   },
   header: {
     fontSize: 24,
@@ -138,12 +143,14 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 16,
+    zIndex: 1,
   },
   autocompleteContainer: {
-    flex: 1,
+    flex: 0,
     borderRadius: 10,
     backgroundColor: 'white',
     elevation: 3,
+    zIndex: 1,
   },
   textInput: {
     height: 40,
@@ -156,7 +163,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 5,
     elevation: 3,
-    zIndex: 1000,
+    position: 'absolute',
+    top: 45,
+    left: 0,
+    right: 0,
+    zIndex: 999,
   },
   row: {
     padding: 13,
