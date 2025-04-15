@@ -1,17 +1,14 @@
 import 'react-native-get-random-values'; // Import the polyfill at the top
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, ScrollView } from 'react-native';
 import { GooglePlacesAutocomplete, GooglePlaceData, GooglePlaceDetail } from 'react-native-google-places-autocomplete';
-
-interface Location {
-  description: string;
-}
 
 const PriceCalculator: React.FC = () => {
   const [price, setPrice] = useState<number | null>(null);
   const [distance, setDistance] = useState<string>('');
   const [origin, setOrigin] = useState<string>('');
   const [destination, setDestination] = useState<string>('');
+  const [duration, setDuration] = useState<string>('');
 
   useEffect(() => {
     if (distance) {
@@ -50,80 +47,83 @@ const PriceCalculator: React.FC = () => {
   };
 
   return (
-    <FlatList
-      data={[]} // Empty array as we don't need dynamic data for this use case
-      ListHeaderComponent={
-        <View style={styles.container}>
-          <Text style={styles.header}>Delivery starts from Rs 7/km</Text>
+    <ScrollView style={styles.scrollView}>
+      <View style={styles.container}>
+        <Text style={styles.header}>Delivery starts from Rs 7/km</Text>
 
-          <View style={styles.inputContainer}>
-            <GooglePlacesAutocomplete
-              placeholder="Enter pickup location"
-              onPress={(data, details) => handleLocationSelect(data, details, true)}
-              query={{
-                key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
-                language: 'en',
-              }}
-              fetchDetails={true}
-              styles={{
-                container: styles.autocompleteContainer,
-                textInput: styles.textInput,
-              }}
-              onFail={error => console.error(error)}
-              textInputProps={{
-                value: origin, // Bind the input value to state
-                onChangeText: text => setOrigin(text), // Update the state on text change
-              }}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <GooglePlacesAutocomplete
-              placeholder="Enter delivery location"
-              onPress={(data, details) => handleLocationSelect(data, details, false)}
-              query={{
-                key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
-                language: 'en',
-              }}
-              fetchDetails={true}
-              styles={{
-                container: styles.autocompleteContainer,
-                textInput: styles.textInput,
-              }}
-              onFail={error => console.error(error)}
-              textInputProps={{
-                value: destination, // Bind the input value to state
-                onChangeText: text => setDestination(text), // Update the state on text change
-              }}
-            />
-          </View>
-
-          <TouchableOpacity
-            style={styles.button}
-            onPress={calculateRoute}
-          >
-            <Text style={styles.buttonText}>Check Prices for Estimates</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.infoText}>We treat your package as our most precious gift</Text>
-
-          {price !== null && (
-            <View style={styles.priceContainer}>
-              <Text style={styles.priceText}>
-                Estimated charges if parcel weight is less than 10 kg
-              </Text>
-              <Text style={styles.priceAmount}>₹{price} | Distance: {distance} km</Text>
-            </View>
-          )}
+        <View style={styles.inputContainer}>
+          <GooglePlacesAutocomplete
+            placeholder="Enter pickup location"
+            onPress={(data, details) => handleLocationSelect(data, details, true)}
+            query={{
+              key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
+              language: 'en',
+            }}
+            fetchDetails={true}
+            styles={{
+              container: styles.autocompleteContainer,
+              textInput: styles.textInput,
+              listView: styles.listView,
+              row: styles.row,
+            }}
+            onFail={error => console.error(error)}
+            textInputProps={{
+              value: origin, // Bind the input value to state
+              onChangeText: text => setOrigin(text), // Update the state on text change
+            }}
+          />
         </View>
-      }
-      renderItem={() => null} // We don't need to render any list items dynamically
-      scrollEnabled={true} // Ensure the entire content can scroll
-    />
+
+        <View style={styles.inputContainer}>
+          <GooglePlacesAutocomplete
+            placeholder="Enter delivery location"
+            onPress={(data, details) => handleLocationSelect(data, details, false)}
+            query={{
+              key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
+              language: 'en',
+            }}
+            fetchDetails={true}
+            styles={{
+              container: styles.autocompleteContainer,
+              textInput: styles.textInput,
+              listView: styles.listView,
+              row: styles.row,
+            }}
+            onFail={error => console.error(error)}
+            textInputProps={{
+              value: destination, // Bind the input value to state
+              onChangeText: text => setDestination(text), // Update the state on text change
+            }}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={calculateRoute}
+        >
+          <Text style={styles.buttonText}>Check Prices for Estimates</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.infoText}>We treat your package as our most precious gift</Text>
+
+        {price !== null && (
+          <View style={styles.priceContainer}>
+            <Text style={styles.priceText}>
+              Estimated charges if parcel weight is less than 10 kg
+            </Text>
+            <Text style={styles.priceAmount}>₹{price} | Distance: {distance} km</Text>
+            {duration && <Text style={styles.durationText}>Estimated time: {duration}</Text>}
+          </View>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     padding: 16,
@@ -151,6 +151,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 10,
     fontSize: 16,
+  },
+  listView: {
+    backgroundColor: 'white',
+    borderRadius: 5,
+    elevation: 3,
+    zIndex: 1000,
+  },
+  row: {
+    padding: 13,
+    height: 44,
   },
   button: {
     backgroundColor: '#007bff',
@@ -181,10 +191,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
+  durationText: {
+    fontSize: 16,
+    color: '#333',
+    marginTop: 8,
+  },
 });
 
 export default PriceCalculator;
-
-function setDuration(arg0: string) {
-  throw new Error('Function not implemented.');
-}

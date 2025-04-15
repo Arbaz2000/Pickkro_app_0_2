@@ -28,6 +28,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState('all');
   
   // Get user phone from Zustand store
   const userPhone = useUserStore((state) => state.phoneNumber);
@@ -75,67 +76,44 @@ export default function Orders() {
     loadOrders();
   };
   
-  const getStatusColor = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'pickup': return '#FFB800';
-      case 'progress': return '#FF6B00';
-      case 'delivered': return '#00C853';
-      case 'completed': return '#007AFF';
-      case 'cancel': return '#FF0000';
-      default: return '#666666';
+  // Filter orders based on status
+  const filteredOrders = orders.filter(order => {
+    switch (filter) {
+      case 'all':
+        return true;
+      case 'accepted':
+        // Show orders that are accepted but not canceled or completed
+        return order.accepted === true && order.canceled !== true && order.completed !== true;
+      case 'canceled':
+        return order.canceled === true;
+      case 'completed':
+        return order.completed === true;
+      default:
+        return true;
     }
+  });
+  
+  const getOrderStatus = (order: any) => {
+    if (order.canceled) return 'Canceled';
+    if (order.completed) return 'Completed';
+    if (order.accepted === true) return 'Accepted';
+    return 'Pending';
+  };
+
+  const getStatusIcon = (order: any) => {
+    if (order.canceled) return 'close-circle';
+    if (order.completed) return 'checkmark-circle';
+    if (order.accepted === true) return 'checkmark-circle';
+    return 'alert-circle';
+  };
+
+  const getStatusColor = (order: any) => {
+    if (order.canceled) return '#FF3B30';
+    if (order.completed) return '#34C759';
+    if (order.accepted === true) return '#007AFF';
+    return '#FF9500';
   };
   
-  const getProgressWidth = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'pickup': return '66%';
-      case 'progress': return '33%';
-      case 'delivered': return '100%';
-      case 'completed': return '100%';
-      case 'cancel': return '100%';
-      default: return '0%';
-    }
-  };
-  
-  const renderProgressOrStatus = (status: string) => {
-    if (!status) return null;
-
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === 'cancel') {
-      return (
-        <View style={styles.deliveredContainer}>
-          <Ionicons name="close-circle" size={20} color="#FF0000" />
-          <Text style={styles.canceldeliveredText}>Package cancelled</Text>
-        </View>
-      )
-    }
-    
-    if (statusLower === 'delivered') {
-      return (
-        <View style={styles.deliveredContainer}>
-          <Ionicons name="checkmark-circle" size={20} color="#00C853" />
-          <Text style={styles.deliveredText}>Package delivered successfully</Text>
-        </View>
-      );
-    }
-
-    if (statusLower === 'completed') {
-      return (
-        <View style={styles.deliveredContainer}>
-          <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
-          <Text style={[styles.deliveredText, { color: '#007AFF' }]}>Order completed successfully</Text>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: getProgressWidth(status) }]} />
-      </View>
-    );
-  };
-
   // Format date from API response
   const formatDate = (dateString: string) => {
     try {
@@ -163,6 +141,32 @@ export default function Orders() {
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Track & Status</Text>
+        <View style={styles.filterContainer}>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'all' && styles.activeFilter]}
+            onPress={() => setFilter('all')}
+          >
+            <Text style={[styles.filterText, filter === 'all' && styles.activeFilterText]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'accepted' && styles.activeFilter]}
+            onPress={() => setFilter('accepted')}
+          >
+            <Text style={[styles.filterText, filter === 'accepted' && styles.activeFilterText]}>Accepted</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'canceled' && styles.activeFilter]}
+            onPress={() => setFilter('canceled')}
+          >
+            <Text style={[styles.filterText, filter === 'canceled' && styles.activeFilterText]}>Canceled</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, filter === 'completed' && styles.activeFilter]}
+            onPress={() => setFilter('completed')}
+          >
+            <Text style={[styles.filterText, filter === 'completed' && styles.activeFilterText]}>Completed</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
       {loading && !refreshing ? (
@@ -178,7 +182,7 @@ export default function Orders() {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      ) : orders.length === 0 ? (
+      ) : filteredOrders.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="document-text-outline" size={60} color="#CCCCCC" />
           <Text style={styles.emptyText}>No orders found</Text>
@@ -190,51 +194,91 @@ export default function Orders() {
           </TouchableOpacity>
         </View>
       ) : (
-        orders.map((order, index) => (
+        filteredOrders.map((order, index) => (
           <TouchableOpacity 
             key={index}
             style={styles.orderCard}
             onPress={() => {
-              const status = order.status?.toLowerCase() || '';
-              if (status === 'pickup' || status === 'progress' || status === 'delivered') {
+              const status = getOrderStatus(order);
+              const orderData = encodeURIComponent(JSON.stringify(order));
+              
+              if (status === 'Accepted') {
                 router.push({
                   pathname: '/rider-details',
                   params: { 
-                    status: order.status,
-                    orderId: order.id || order._id
+                    status: status,
+                    orderId: order._id,
+                    order: orderData
                   }
                 });
-              } else if (status === 'completed') {
+              } else if (status === 'Completed') {
                 router.push({
                   pathname: '/completed-order-details',
                   params: { 
-                    orderId: order.id || order._id
+                    orderId: order._id,
+                    order: orderData
                   }
                 });
-              } else {
-                router.push('/cancel-order-details');
+              } else if (status === 'Canceled') {
+                router.push({
+                  pathname: '/cancel-order-details',
+                  params: {
+                    orderId: order._id,
+                    order: orderData
+                  }
+                });
               }
             }}
           >
             <View style={styles.orderHeader}>
-              <Text style={styles.packageId}>Package #{order.id || order._id || 'N/A'}</Text>
-              {order.status && (
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-                  <Text style={styles.statusText}>{order.status}</Text>
-                </View>
-              )}
-            </View>
-            <Text style={styles.fromText}>From: {order.PickupDetails?.address || 'N/A'}</Text>
-            
-            {renderProgressOrStatus(order.status)}
-            {order.status && !['delivered', 'cancel', 'completed'].includes(order.status.toLowerCase()) && (
-              <View style={styles.progressContainer}>
-                <Text style={styles.stepText}>Order Placed</Text>
-                <Text style={styles.stepText}>Pickup</Text>
-                <Text style={styles.stepText}>Delivered</Text>
+              <View style={styles.orderIdContainer}>
+                <Text style={styles.packageId}>Package #{order._id.slice(-8)}</Text>
+                <Text style={styles.orderDate}>{formatDate(order.Date)}</Text>
               </View>
-            )}
-            <Text style={styles.dateText}>{formatDate(order.Date || order.createdAt || '')}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order) }]}>
+                <Ionicons name={getStatusIcon(order)} size={16} color="#fff" />
+                <Text style={styles.statusText}>{getOrderStatus(order)}</Text>
+              </View>
+            </View>
+
+            <View style={styles.orderDetails}>
+              <View style={styles.locationContainer}>
+                <View style={styles.locationItem}>
+                  <Ionicons name="location-outline" size={20} color="#666" />
+                  <View style={styles.locationText}>
+                    <Text style={styles.locationLabel}>Pickup</Text>
+                    <Text style={styles.locationAddress} numberOfLines={2}>
+                      {order.PickupDetails?.address || 'N/A'}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.locationDivider} />
+                <View style={styles.locationItem}>
+                  <Ionicons name="location" size={20} color="#666" />
+                  <View style={styles.locationText}>
+                    <Text style={styles.locationLabel}>Delivery</Text>
+                    <Text style={styles.locationAddress} numberOfLines={2}>
+                      {order.DeliveryDetails?.address || 'N/A'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.orderInfo}>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Item:</Text>
+                  <Text style={styles.infoValue}>{order.Item}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Weight:</Text>
+                  <Text style={styles.infoValue}>{order.weight}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Price:</Text>
+                  <Text style={styles.infoValue}>₹{order.price || 'N/A'}</Text>
+                </View>
+              </View>
+            </View>
           </TouchableOpacity>
         ))
       )}
@@ -281,85 +325,83 @@ const styles = StyleSheet.create({
   orderHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  orderIdContainer: {
+    flex: 1,
   },
   packageId: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1E88E5',
+    marginBottom: 4,
+  },
+  orderDate: {
+    fontSize: 12,
+    color: '#666',
   },
   statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    minWidth: 80,
-    alignItems: 'center',
+    gap: 4,
   },
   statusText: {
     color: '#fff',
     fontSize: 13,
     fontWeight: '600',
   },
-  fromText: {
+  orderDetails: {
+    gap: 16,
+  },
+  locationContainer: {
+    gap: 12,
+  },
+  locationItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  locationText: {
+    flex: 1,
+  },
+  locationLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+  },
+  locationAddress: {
     fontSize: 14,
     color: '#333',
-    marginBottom: 16,
-    fontWeight: '500',
+    lineHeight: 20,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#e0e0e0',
+  locationDivider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginLeft: 28,
   },
-  stepText: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '600',
-  },
-  dateText: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 8,
-    fontWeight: '500',
-  },
-  progressBarContainer: {
-    height: 4,
-    backgroundColor: '#E0E0E0',
-    marginBottom: 12,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#1E88E5',
-    borderRadius: 2,
-  },
-  deliveredContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingVertical: 8,
+  orderInfo: {
     backgroundColor: '#f8f8f8',
-    paddingHorizontal: 12,
+    padding: 12,
     borderRadius: 8,
+    gap: 8,
   },
-  deliveredText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#00C853',
-    fontWeight: '600',
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  canceldeliveredText: {
-    marginLeft: 8,
+  infoLabel: {
     fontSize: 14,
-    color: '#FF3B30',
-    fontWeight: '600',
+    color: '#666',
+  },
+  infoValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   loadingContainer: {
     flex: 1,
@@ -434,5 +476,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  activeFilter: {
+    backgroundColor: '#1E88E5',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeFilterText: {
+    color: '#fff',
   },
 });

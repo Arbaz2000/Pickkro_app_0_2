@@ -4,6 +4,7 @@ import { Snackbar } from 'react-native-paper';
 
 interface User {
   _id: string;
+  id?: string;
   email: string;
   name: string;
   phone: string;
@@ -62,9 +63,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setUser({
+        _id: 'guest',
         id: 'guest',
         email: 'guest@example.com',
         name: 'Guest User',
+        phone: '',
+        isAdmin: false,
+        isRider: false,
+        onDuty: false,
+        pendingPayment: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
       
       router.replace('/(tabs)/dashboard');
@@ -118,9 +127,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Mock successful registration
       setUser({
+        _id: '1',
         id: '1',
         email: data.email,
         name: data.name,
+        phone: '',
+        isAdmin: false,
+        isRider: false,
+        onDuty: false,
+        pendingPayment: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
       
       router.replace('/(tabs)/dashboard');

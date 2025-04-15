@@ -1,15 +1,41 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 export default function CancelOrderDetails() {
+  const params = useLocalSearchParams();
+  const order = params.order ? JSON.parse(decodeURIComponent(params.order as string)) : null;
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateString || 'N/A';
+    }
+  };
+
+  if (!order) {
+    return (
+      <View style={styles.container}>
+        <Text>Order not found</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={{ padding: 8 }}
-          onPress={() => router.push('/dashboard')}
+          onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
@@ -21,12 +47,12 @@ export default function CancelOrderDetails() {
 
       <View style={styles.orderInfo}>
         <View style={styles.orderRow}>
-          <Text style={styles.orderLabel}>Order #HD67931</Text>
-          <Text style={styles.orderStatus}>order cancel</Text>
+          <Text style={styles.orderLabel}>Order #{order._id?.slice(-8) || 'N/A'}</Text>
+          <Text style={styles.orderStatus}>Order Canceled</Text>
         </View>
         <View style={styles.orderRow}>
           <Text style={styles.orderSubLabel}>Cancellation Request</Text>
-          <Text style={styles.orderDate}>Today, 5:30 PM</Text>
+          <Text style={styles.orderDate}>{formatDate(order.Date || new Date().toISOString())}</Text>
         </View>
       </View>
 
@@ -34,20 +60,33 @@ export default function CancelOrderDetails() {
         <View style={styles.locationItem}>
           <Ionicons name="location" size={24} color="#007AFF" />
           <View style={styles.locationDetails}>
-            <Text style={styles.locationTitle}>Michael Anderson</Text>
-            <Text style={styles.locationAddress}>1234 Willow Street, Apartment 5B</Text>
-            <Text style={styles.locationAddress}>San Francisco, CA 94110</Text>
-            <Text style={styles.phoneNumber}>+1 (415) 555-0123</Text>
+            <Text style={styles.locationTitle}>Pickup: {order.PickupDetails?.name || 'N/A'}</Text>
+            <Text style={styles.locationAddress}>{order.PickupDetails?.address || 'N/A'}</Text>
+            <Text style={styles.phoneNumber}>{order.PickupDetails?.phone || 'N/A'}</Text>
           </View>
         </View>
 
         <View style={styles.locationItem}>
           <Ionicons name="location" size={24} color="#007AFF" />
           <View style={styles.locationDetails}>
-            <Text style={styles.locationTitle}>Drop: Mary Johnson</Text>
-            <Text style={styles.locationAddress}>456 Residential Ave</Text>
-            <Text style={styles.locationAddress}>New York, NY 10002</Text>
-            <Text style={styles.phoneNumber}>+1 (345) 678-9012</Text>
+            <Text style={styles.locationTitle}>Drop: {order.DeliveryDetails?.name || 'N/A'}</Text>
+            <Text style={styles.locationAddress}>{order.DeliveryDetails?.address || 'N/A'}</Text>
+            <Text style={styles.phoneNumber}>{order.DeliveryDetails?.phone || 'N/A'}</Text>
+          </View>
+        </View>
+
+        <View style={styles.orderDetails}>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Item:</Text>
+            <Text style={styles.detailValue}>{order.Item || 'N/A'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Weight:</Text>
+            <Text style={styles.detailValue}>{order.weight || 'N/A'}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Price:</Text>
+            <Text style={styles.detailValue}>₹{order.price || 'N/A'}</Text>
           </View>
         </View>
       </View>
@@ -125,5 +164,25 @@ const styles = StyleSheet.create({
   phoneNumber: {
     fontSize: 14,
     color: '#666',
+  },
+  orderDetails: {
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
 });

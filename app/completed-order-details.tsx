@@ -1,9 +1,35 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 
 export default function CompletedOrderDetails() {
+  const params = useLocalSearchParams();
+  const order = params.order ? JSON.parse(decodeURIComponent(params.order as string)) : null;
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (e) {
+      return dateString || 'N/A';
+    }
+  };
+
+  if (!order) {
+    return (
+      <View style={styles.container}>
+        <Text>Order not found</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
@@ -20,15 +46,15 @@ export default function CompletedOrderDetails() {
       </View>
       <View style={styles.content}>
         <View style={styles.orderHeader}>
-          <Text style={styles.orderNumber}>Order No: #FX8Z749US</Text>
-          <Text style={[styles.orderStatus, { color: '#007AFF' }]}>Complete</Text>
+          <Text style={styles.orderNumber}>Order No: #{order._id?.slice(-8) || 'N/A'}</Text>
+          <Text style={[styles.orderStatus, { color: '#34C759' }]}>Completed</Text>
         </View>
         <View style={styles.section}>
           <View style={styles.deliveryRow}>
             <Ionicons name="person-circle-outline" size={24} color="#000" />
             <View style={styles.deliveryTextContainer}>
               <Text style={styles.deliveryTitle}>Delivered by</Text>
-              <Text style={styles.deliveryName}>John Smith</Text>
+              <Text style={styles.deliveryName}>{order.DeliveryDetails?.name || 'N/A'}</Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={16} color="#FF6B00" />
                 <Text style={styles.ratingText}>4.8</Text>
@@ -40,32 +66,31 @@ export default function CompletedOrderDetails() {
             <Ionicons name="time-outline" size={24} color="#000" />
             <View style={styles.deliveryTextContainer}>
               <Text style={styles.deliveryTitle}>Delivery Status</Text>
-              <Text style={styles.deliveryText}>Delivered on June 15, 2024 at 2:30 PM</Text>
+              <Text style={styles.deliveryText}>Delivered on {formatDate(order.Date || new Date().toISOString())}</Text>
             </View>
           </View>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recipient</Text>
-          <Text style={styles.recipientName}>Michael Anderson</Text>
-          <Text style={styles.recipientPhone}>+1 (555) 123-4567</Text>
+          <Text style={styles.recipientName}>{order.DeliveryDetails?.name || 'N/A'}</Text>
+          <Text style={styles.recipientPhone}>{order.DeliveryDetails?.phone || 'N/A'}</Text>
           <View style={styles.divider} />
           <Text style={styles.sectionTitle}>Delivery Address</Text>
-          <Text style={styles.recipientAddress}>1234 Maple Street, Apt 5B</Text>
-          <Text style={styles.recipientLocation}>Brooklyn, NY 11201</Text>
+          <Text style={styles.recipientAddress}>{order.DeliveryDetails?.address || 'N/A'}</Text>
         </View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Package Details</Text>
           <View style={styles.packageRow}>
+            <Text style={styles.packageLabel}>Item</Text>
+            <Text style={styles.packageValue}>{order.Item || 'N/A'}</Text>
+          </View>
+          <View style={styles.packageRow}>
             <Text style={styles.packageLabel}>Weight</Text>
-            <Text style={styles.packageValue}>2.5 Kg</Text>
+            <Text style={styles.packageValue}>{order.weight || 'N/A'}</Text>
           </View>
           <View style={styles.packageRow}>
-            <Text style={styles.packageLabel}>Dimensions</Text>
-            <Text style={styles.packageValue}>30 × 25 × 15 cm</Text>
-          </View>
-          <View style={styles.packageRow}>
-            <Text style={styles.packageLabel}>Category</Text>
-            <Text style={styles.packageValue}>Electronics</Text>
+            <Text style={styles.packageLabel}>Price</Text>
+            <Text style={styles.packageValue}>₹{order.price || 'N/A'}</Text>
           </View>
         </View>
         <View style={styles.section}>
@@ -84,9 +109,12 @@ export default function CompletedOrderDetails() {
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={[styles.ratingButton, { borderColor: '#007AFF' }]}>
-            <Text style={[styles.buttonText, { color: '#007AFF' }]}>Rating</Text>
+            <Text style={[styles.buttonText, { color: '#007AFF' }]}>Rate Delivery</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.repeatButton, { backgroundColor: '#FF6B00' }]}>
+          <TouchableOpacity 
+            style={[styles.repeatButton, { backgroundColor: '#FF6B00' }]}
+            onPress={() => router.push('/book')}
+          >
             <Text style={styles.whitebuttonText}>Repeat Order</Text>
           </TouchableOpacity>
         </View>
@@ -130,11 +158,15 @@ const styles = StyleSheet.create({
   },
   orderStatus: {
     fontSize: 14,
-    color: '#007AFF',
     fontWeight: '500',
   },
-  deliveryInfo: {
-    gap: 24,
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   deliveryRow: {
     flexDirection: 'row',
@@ -166,8 +198,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  recipientSection: {
-    gap: 8,
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 16,
   },
   sectionTitle: {
     fontSize: 16,
@@ -186,16 +220,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  recipientLocation: {
-    fontSize: 14,
-    color: '#666',
-  },
-  packageSection: {
-    gap: 12,
-  },
   packageRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginBottom: 8,
   },
   packageLabel: {
     fontSize: 14,
@@ -204,9 +232,6 @@ const styles = StyleSheet.create({
   packageValue: {
     fontSize: 14,
     fontWeight: '500',
-  },
-  ratingSection: {
-    marginBottom: 24,
   },
   starsContainer: {
     flexDirection: 'row',
@@ -221,6 +246,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 8,
   },
   ratingButton: {
     flex: 1,
@@ -229,11 +255,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#000',
   },
   repeatButton: {
     flex: 1,
-    backgroundColor: '#000',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -241,24 +265,10 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#000',
   },
   whitebuttonText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#fff',
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#e0e0e0',
-    marginVertical: 16,
   },
 });
