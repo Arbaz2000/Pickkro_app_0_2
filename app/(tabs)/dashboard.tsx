@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,27 @@ import {
   Image,
   TextInput,
   Modal,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
 import PriceCalculator from '@/components/PriceCalculator';
 import { useAuth } from '@/context/auth';
+import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Define location type
+interface LocationType {
+  latitude: number;
+  longitude: number;
+}
+
+// Define favorite location type
+interface FavoriteLocationType extends LocationType {
+  name: string;
+  address: string;
+}
 
 const QUICK_ACTIONS = [
   { id: 1, title: 'Send Package', icon: 'cube', color: '#007AFF' },
@@ -43,7 +59,201 @@ export default function Dashboard() {
   const { user, signInAsGuest } = useAuth();
   const [location, setLocation] = useState('New York, NY');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState<LocationType | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [favoriteLocations, setFavoriteLocations] = useState<FavoriteLocationType[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
+  
   const toggleMenu = () => setMenuVisible(!menuVisible);
+  
+  // Save location to AsyncStorage
+  const saveLocationToStorage = async (loc: LocationType, address: string) => {
+    try {
+      await AsyncStorage.setItem('userLocation', JSON.stringify(loc));
+      await AsyncStorage.setItem('userLocationAddress', address);
+      console.log('Location saved to storage');
+    } catch (error) {
+      console.error('Error saving location to storage:', error);
+    }
+  };
+  
+  // Load location from AsyncStorage
+  const loadLocationFromStorage = async () => {
+    try {
+      const savedLocation = await AsyncStorage.getItem('userLocation');
+      const savedAddress = await AsyncStorage.getItem('userLocationAddress');
+      
+      if (savedLocation && savedAddress) {
+        const parsedLocation = JSON.parse(savedLocation);
+        setUserLocation(parsedLocation);
+        setLocation(savedAddress);
+        console.log('Location loaded from storage');
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error loading location from storage:', error);
+      return false;
+    }
+  };
+  
+  // Load favorite locations from storage
+  const loadFavoriteLocations = async () => {
+    try {
+      const savedFavorites = await AsyncStorage.getItem('favoriteLocations');
+      if (savedFavorites) {
+        const parsedFavorites = JSON.parse(savedFavorites);
+        setFavoriteLocations(parsedFavorites);
+        console.log('Favorite locations loaded from storage');
+      }
+    } catch (error) {
+      console.error('Error loading favorite locations from storage:', error);
+    }
+  };
+  
+  // Save favorite locations to storage
+  const saveFavoriteLocations = async (favorites: FavoriteLocationType[]) => {
+    try {
+      await AsyncStorage.setItem('favoriteLocations', JSON.stringify(favorites));
+      console.log('Favorite locations saved to storage');
+    } catch (error) {
+      console.error('Error saving favorite locations to storage:', error);
+    }
+  };
+  
+  // Add current location to favorites
+  const addToFavorites = async () => {
+    if (!userLocation) return;
+    
+    // Get a name for the favorite location
+    Alert.prompt(
+      'Add to Favorites',
+      'Enter a name for this location:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Add',
+          onPress: async (name) => {
+            if (!name) return;
+            
+            const newFavorite: FavoriteLocationType = {
+              ...userLocation,
+              name,
+              address: location,
+            };
+            
+            const updatedFavorites = [...favoriteLocations, newFavorite];
+            setFavoriteLocations(updatedFavorites);
+            await saveFavoriteLocations(updatedFavorites);
+            
+            Alert.alert('Success', 'Location added to favorites');
+          },
+        },
+      ],
+      'plain-text',
+      'Home'
+    );
+  };
+  
+  // Remove a favorite location
+  const removeFavorite = async (index: number) => {
+    const updatedFavorites = [...favoriteLocations];
+    updatedFavorites.splice(index, 1);
+    setFavoriteLocations(updatedFavorites);
+    await saveFavoriteLocations(updatedFavorites);
+  };
+  
+  // Use a favorite location
+  const useFavoriteLocation = (favorite: FavoriteLocationType) => {
+    setUserLocation({
+      latitude: favorite.latitude,
+      longitude: favorite.longitude,
+    });
+    setLocation(favorite.address);
+    setShowFavorites(false);
+  };
+  
+  // Get user's current location
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    try {
+      console.log("Requesting location permissions...");
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      console.log("Location permission status:", status);
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        return;
+      }
+
+      console.log("Getting current position...");
+      let location = await Location.getCurrentPositionAsync({});
+      console.log("Current position:", location);
+      
+      // Get address for current location
+      try {
+        console.log("Reverse geocoding current location...");
+        const result = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        console.log("Reverse geocoding result:", result);
+        
+        if (result.length > 0) {
+          const address = result[0];
+          const formattedAddress = [
+            address.city,
+            address.region,
+            address.country,
+          ]
+            .filter(Boolean)
+            .join(', ');
+            
+          console.log("Setting location to:", formattedAddress);
+          setLocation(formattedAddress);
+          
+          const userLoc = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
+          setUserLocation(userLoc);
+          
+          // Save to storage
+          saveLocationToStorage(userLoc, formattedAddress);
+        } else {
+          console.log("No address found for current location");
+        }
+      } catch (error) {
+        console.error('Error getting address for current location:', error);
+      }
+    } catch (error) {
+      console.error('Error getting current location:', error);
+      Alert.alert('Error', 'Failed to get your current location. Please try again.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+  
+  // Get location when component mounts
+  useEffect(() => {
+    const initializeLocation = async () => {
+      // Load favorite locations
+      await loadFavoriteLocations();
+      
+      // Try to load from storage first
+      const loadedFromStorage = await loadLocationFromStorage();
+      
+      // If not in storage, get current location
+      if (!loadedFromStorage) {
+        getCurrentLocation();
+      }
+    };
+    
+    initializeLocation();
+  }, []);
   
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -52,50 +262,28 @@ export default function Dashboard() {
           source={{ uri: 'https://via.placeholder.com/40' }}
           style={styles.logo}
         />
-        <TouchableOpacity style={styles.locationSelector}>
+        <TouchableOpacity 
+          style={styles.locationSelector}
+          onPress={getCurrentLocation}
+          disabled={locationLoading}
+        >
           <Ionicons name="location" size={20} color="#007AFF" />
-          <Text style={styles.locationText}>{location}</Text>
-          <Ionicons name="chevron-down" size={20} color="#007AFF" />
+          <Text style={styles.locationText}>
+            {locationLoading ? 'Getting location...' : location}
+          </Text>
+          {locationLoading ? (
+            <ActivityIndicator size="small" color="#007AFF" style={styles.locationLoader} />
+          ) : (
+            <Ionicons name="refresh" size={20} color="#007AFF" />
+          )}
         </TouchableOpacity>
         <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
           <Ionicons name="menu" size={24} color="#333" />
         </TouchableOpacity>
       </View>
-      <Modal
-        visible={menuVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={toggleMenu}
-      >
-        <TouchableOpacity style={styles.menuOverlay} onPress={toggleMenu}>
-          <View style={styles.menuContainer}>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Notifications</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Orders</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Terms & Conditions</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Privacy Policy</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Help</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>About Us</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Language</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem}>
-              <Text style={styles.menuText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      
+      
+      
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={20} color="#666" />
         <TextInput
@@ -297,6 +485,89 @@ export default function Dashboard() {
           </TouchableOpacity>
         </Link>
       ))} */}
+      
+      <Modal
+        visible={menuVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleMenu}
+      >
+        <TouchableOpacity style={styles.menuOverlay} onPress={toggleMenu}>
+          <View style={styles.menuContainer}>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Notifications</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Orders</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Terms & Conditions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Help</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>About Us</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Language</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem}>
+              <Text style={styles.menuText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Favorites Modal */}
+      <Modal
+        visible={showFavorites}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFavorites(false)}
+      >
+        <View style={styles.favoritesModalContainer}>
+          <View style={styles.favoritesModalContent}>
+            <View style={styles.favoritesModalHeader}>
+              <Text style={styles.favoritesModalTitle}>Favorite Locations</Text>
+              <TouchableOpacity onPress={() => setShowFavorites(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+            
+            {favoriteLocations.length === 0 ? (
+              <Text style={styles.noFavoritesText}>No favorite locations yet</Text>
+            ) : (
+              <ScrollView style={styles.favoritesList}>
+                {favoriteLocations.map((favorite, index) => (
+                  <TouchableOpacity 
+                    key={index}
+                    style={styles.favoriteItem}
+                    onPress={() => useFavoriteLocation(favorite)}
+                  >
+                    <View style={styles.favoriteItemContent}>
+                      <Ionicons name="location" size={20} color="#007AFF" />
+                      <View style={styles.favoriteItemText}>
+                        <Text style={styles.favoriteItemName}>{favorite.name}</Text>
+                        <Text style={styles.favoriteItemAddress}>{favorite.address}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity 
+                      style={styles.removeFavoriteButton}
+                      onPress={() => removeFavorite(index)}
+                    >
+                      <Ionicons name="trash" size={20} color="#FF3B30" />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -333,6 +604,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  locationLoader: {
+    marginLeft: 8,
+  },
+  locationActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  locationActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  locationActionText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#333',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -716,5 +1009,68 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 8,
+  },
+  favoritesModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  favoritesModalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    width: '80%',
+    maxHeight: '80%',
+  },
+  favoritesModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  favoritesModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  noFavoritesText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  favoritesList: {
+    maxHeight: 300,
+  },
+  favoriteItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  favoriteItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  favoriteItemText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  favoriteItemName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  favoriteItemAddress: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
+  },
+  removeFavoriteButton: {
+    padding: 8,
   },
 });
