@@ -37,6 +37,10 @@
         "googleMaps": {
           "apiKey": "AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8"
         }
+      },
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
       }
     },
     "owner": "arbazkhan007"
