@@ -36,7 +36,7 @@ export default function Book() {
     'Medicine',
     'Gift',
     'Office Goods',
-    'Other'
+    'Other',
   ];
   const weightOptions = ['Up to 5 kg', '5-10 kg', '10-15 kg', '15-20 kg'];
   const paymentTypes = ['cash on delivery', 'online payment'];
@@ -44,51 +44,60 @@ export default function Book() {
   // Add state variables
   const [selectedPackage, setSelectedPackage] = useState('');
   const [selectedWeight, setSelectedWeight] = useState('');
-  const [selectedPaymentType, setSelectedPaymentType] = useState('cash on delivery');
+  const [selectedPaymentType, setSelectedPaymentType] =
+    useState('cash on delivery');
   const [parcelValue, setParcelValue] = useState('');
   const [price, setPrice] = useState(0);
   const [loading, setLoading] = useState(false);
-  
+
   // Pickup details
   const [pickupName, setPickupName] = useState('');
   const [pickupAddress, setPickupAddress] = useState('');
   const [pickupPhone, setPickupPhone] = useState('');
   const [pickupLocality, setPickupLocality] = useState('');
-  
+
   // Delivery details
   const [deliveryName, setDeliveryName] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryPhone, setDeliveryPhone] = useState('');
   const [deliveryLocality, setDeliveryLocality] = useState('');
-  
+
   // Time and date
   const [hours, setHours] = useState(1);
   const [minutes, setMinutes] = useState(0);
   const [meridian, setMeridian] = useState('AM');
   const [date, setDate] = useState('');
-  
+
   // Instructions
   const [instruction, setInstruction] = useState('');
-  
+
   // Location state
-  const [pickupLocation, setPickupLocation] = useState<LocationType | null>(null);
-  const [deliveryLocation, setDeliveryLocation] = useState<LocationType | null>(null);
+  const [pickupLocation, setPickupLocation] = useState<LocationType | null>(
+    null
+  );
+  const [deliveryLocation, setDeliveryLocation] = useState<LocationType | null>(
+    null
+  );
   const [userLocation, setUserLocation] = useState<LocationType | null>(null);
-  
+
   // Map state
   const [showPickupMap, setShowPickupMap] = useState(false);
   const [showDeliveryMap, setShowDeliveryMap] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<LocationType | null>(null);
-  const [selectedLocationType, setSelectedLocationType] = useState<'pickup' | 'delivery'>('pickup');
-  
+  const [selectedLocation, setSelectedLocation] = useState<LocationType | null>(
+    null
+  );
+  const [selectedLocationType, setSelectedLocationType] = useState<
+    'pickup' | 'delivery'
+  >('pickup');
+
   // Tooltip state
   const [showPickupTooltip, setShowPickupTooltip] = useState(false);
   const [showDeliveryTooltip, setShowDeliveryTooltip] = useState(false);
-  
+
   // Map refs
   const pickupMapRef = useRef<MapView>(null);
   const deliveryMapRef = useRef<MapView>(null);
-  
+
   // Set default date to tomorrow
   useEffect(() => {
     const tomorrow = new Date();
@@ -96,17 +105,17 @@ export default function Book() {
     const formattedDate = tomorrow.toLocaleDateString('en-US', {
       month: 'short',
       day: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
     setDate(formattedDate);
   }, []);
-  
+
   // Calculate price based on package type and weight
   useEffect(() => {
     let basePrice = 0;
-    
+
     // Base price by package type
-    switch(selectedPackage) {
+    switch (selectedPackage) {
       case 'Food':
         basePrice = 50;
         break;
@@ -137,10 +146,10 @@ export default function Book() {
       default:
         basePrice = 0;
     }
-    
+
     // Add weight factor
     let weightFactor = 1;
-    switch(selectedWeight) {
+    switch (selectedWeight) {
       case 'Up to 5 kg':
         weightFactor = 1;
         break;
@@ -154,33 +163,36 @@ export default function Book() {
         weightFactor = 2.5;
         break;
     }
-    
+
     setPrice(Math.round(basePrice * weightFactor));
   }, [selectedPackage, selectedWeight]);
 
   // Get user's current location
   useEffect(() => {
     (async () => {
-      console.log("Requesting location permissions...");
+      console.log('Requesting location permissions...');
       let { status } = await Location.requestForegroundPermissionsAsync();
-      console.log("Location permission status:", status);
-      
+      console.log('Location permission status:', status);
+
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Permission to access location was denied');
+        Alert.alert(
+          'Permission Denied',
+          'Permission to access location was denied'
+        );
         return;
       }
 
-      console.log("Getting current position...");
+      console.log('Getting current position...');
       let location = await Location.getCurrentPositionAsync({});
-      console.log("Current position:", location);
-      
+      console.log('Current position:', location);
+
       const userLoc = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-      console.log("User location set to:", userLoc);
+      console.log('User location set to:', userLoc);
       setUserLocation(userLoc);
-      
+
       // Set initial map region to user's location
       if (pickupMapRef.current) {
         pickupMapRef.current.animateToRegion({
@@ -190,7 +202,7 @@ export default function Book() {
           longitudeDelta: 0.01,
         });
       }
-      
+
       if (deliveryMapRef.current) {
         deliveryMapRef.current.animateToRegion({
           latitude: userLoc.latitude,
@@ -199,16 +211,16 @@ export default function Book() {
           longitudeDelta: 0.01,
         });
       }
-      
+
       // Get address for current location and set as pickup address
       try {
-        console.log("Reverse geocoding current location...");
+        console.log('Reverse geocoding current location...');
         const result = await Location.reverseGeocodeAsync({
           latitude: userLoc.latitude,
           longitude: userLoc.longitude,
         });
-        console.log("Reverse geocoding result:", result);
-        
+        console.log('Reverse geocoding result:', result);
+
         if (result.length > 0) {
           const address = result[0];
           const formattedAddress = [
@@ -221,12 +233,12 @@ export default function Book() {
           ]
             .filter(Boolean)
             .join(', ');
-            
-          console.log("Setting pickup address to:", formattedAddress);
+
+          console.log('Setting pickup address to:', formattedAddress);
           setPickupAddress(formattedAddress);
           setPickupLocation(userLoc);
         } else {
-          console.log("No address found for current location");
+          console.log('No address found for current location');
         }
       } catch (error) {
         console.error('Error getting address for current location:', error);
@@ -237,7 +249,7 @@ export default function Book() {
   // Handle map marker press
   const handleMapMarkerPress = (location: LocationType) => {
     setSelectedLocation(location);
-    
+
     // Get address from coordinates using reverse geocoding
     Location.reverseGeocodeAsync({
       latitude: location.latitude,
@@ -255,7 +267,7 @@ export default function Book() {
         ]
           .filter(Boolean)
           .join(', ');
-          
+
         if (selectedLocationType === 'pickup') {
           setPickupAddress(formattedAddress);
           setPickupLocation(location);
@@ -281,16 +293,16 @@ export default function Book() {
   };
 
   // Check if all required fields are filled
-  const isFormComplete = 
-    selectedPackage && 
-    selectedWeight && 
-    pickupName && 
-    pickupAddress && 
-    pickupPhone && 
-    pickupLocality && 
-    deliveryName && 
-    deliveryAddress && 
-    deliveryPhone && 
+  const isFormComplete =
+    selectedPackage &&
+    selectedWeight &&
+    pickupName &&
+    pickupAddress &&
+    pickupPhone &&
+    pickupLocality &&
+    deliveryName &&
+    deliveryAddress &&
+    deliveryPhone &&
     deliveryLocality;
 
   // Handle form submission
@@ -299,14 +311,14 @@ export default function Book() {
       Alert.alert('Incomplete Form', 'Please fill all required fields');
       return;
     }
-    
+
     try {
       setLoading(true);
-      
+
       // Get user phone from Zustand store
       const userPhoneFromStore = useUserStore.getState().phoneNumber;
       console.log('User phone from Zustand store:', userPhoneFromStore);
-      
+
       const orderData = {
         userPhone: userPhoneFromStore || '',
         Item: selectedPackage,
@@ -319,52 +331,83 @@ export default function Book() {
           address: pickupAddress,
           Phone: pickupPhone,
           Locality: pickupLocality,
-          location: pickupLocation
+          location: pickupLocation,
         },
         DeliveryDetails: {
           name: deliveryName,
           address: deliveryAddress,
           Phone: deliveryPhone,
           Locality: deliveryLocality,
-          location: deliveryLocation
+          location: deliveryLocation,
         },
         Time: {
           hours: hours,
           minutes: minutes,
-          meridian: meridian
+          meridian: meridian,
         },
         instruction: instruction || '',
-        Date: date
+        Date: date,
       };
-      
+
       console.log('Submitting order with data:', orderData);
-      
-      const result = await createOrder(orderData);
+
+      const myHeaders = new Headers();
+      myHeaders.append('accept', 'application/json, text/plain, /');
+      myHeaders.append(
+        'accept-language',
+        'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7,hi;q=0.6'
+      );
+      myHeaders.append('content-type', 'application/json');
+      myHeaders.append('origin', 'https://www.pikkro.com');
+      myHeaders.append('priority', 'u=1, i');
+      myHeaders.append('referer', 'https://www.pikkro.com/');
+      myHeaders.append(
+        'sec-ch-ua',
+        '"Chromium";v="134", "Not:A-Brand";v="24", "Google Chrome";v="134"'
+      );
+      myHeaders.append('sec-ch-ua-mobile', '?0');
+      myHeaders.append('sec-ch-ua-platform', '"macOS"');
+      myHeaders.append('sec-fetch-dest', 'empty');
+      myHeaders.append('sec-fetch-mode', 'cors');
+      myHeaders.append('sec-fetch-site', 'cross-site');
+      myHeaders.append(
+        'user-agent',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36'
+      );
+
+      const requestOptions = {
+        method: 'POST',
+        headers: myHeaders,
+        body: JSON.stringify(orderData),
+        redirect: 'follow' as RequestRedirect,
+      };
+
+      const response = await fetch(
+        'https://15.207.211.78.nip.io/api/orders/neworder',
+        requestOptions
+      );
+      const result = await response.text();
       console.log('Order created successfully. Response:', result);
-      
+
       // Show success message
       Alert.alert(
-        'Order Created', 
-        'Your order has been created successfully!', 
+        'Order Created',
+        'Your order has been created successfully!',
         [
           {
             text: 'OK',
-            onPress: () => router.push('/payment-details')
-          }
+            onPress: () => router.push('/payment-details'),
+          },
         ]
       );
     } catch (error) {
       console.error('Error creating order:', error);
-      Alert.alert(
-        'Error', 
-        'Failed to create order. Please try again.',
-        [
-          {
-            text: 'OK',
-            onPress: () => setLoading(false)
-          }
-        ]
-      );
+      Alert.alert('Error', 'Failed to create order. Please try again.', [
+        {
+          text: 'OK',
+          onPress: () => setLoading(false),
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -372,19 +415,19 @@ export default function Book() {
 
   // Add a function to use current location for pickup
   const useCurrentLocationForPickup = async () => {
-    console.log("Use current location button pressed");
+    console.log('Use current location button pressed');
     if (userLocation) {
-      console.log("User location available:", userLocation);
+      console.log('User location available:', userLocation);
       setSelectedLocation(userLocation);
-      
+
       try {
-        console.log("Reverse geocoding user location...");
+        console.log('Reverse geocoding user location...');
         const result = await Location.reverseGeocodeAsync({
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
         });
-        console.log("Reverse geocoding result:", result);
-        
+        console.log('Reverse geocoding result:', result);
+
         if (result.length > 0) {
           const address = result[0];
           const formattedAddress = [
@@ -397,24 +440,36 @@ export default function Book() {
           ]
             .filter(Boolean)
             .join(', ');
-            
-          console.log("Setting pickup address to:", formattedAddress);
+
+          console.log('Setting pickup address to:', formattedAddress);
           setPickupAddress(formattedAddress);
           setPickupLocation(userLocation);
-          
+
           // Show a confirmation alert
-          Alert.alert('Location Set', 'Your current location has been set as the pickup address.');
+          Alert.alert(
+            'Location Set',
+            'Your current location has been set as the pickup address.'
+          );
         } else {
-          console.log("No address found for user location");
-          Alert.alert('Address Not Found', 'Could not find an address for your current location.');
+          console.log('No address found for user location');
+          Alert.alert(
+            'Address Not Found',
+            'Could not find an address for your current location.'
+          );
         }
       } catch (error) {
         console.error('Error getting address for current location:', error);
-        Alert.alert('Error', 'Failed to get address for your current location.');
+        Alert.alert(
+          'Error',
+          'Failed to get address for your current location.'
+        );
       }
     } else {
-      console.log("User location not available");
-      Alert.alert('Location Not Available', 'Unable to get your current location. Please try again.');
+      console.log('User location not available');
+      Alert.alert(
+        'Location Not Available',
+        'Unable to get your current location. Please try again.'
+      );
     }
   };
 
@@ -423,11 +478,11 @@ export default function Book() {
       <View style={styles.header}>
         <Text style={styles.headerText}>Create Order</Text>
       </View>
-      
+
       {/* Package Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Package Details</Text>
-        
+
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Package Type</Text>
           <View style={styles.pickerWrapper}>
@@ -438,14 +493,23 @@ export default function Book() {
                 setSelectedPackage(itemValue);
               }}
             >
-              <Picker.Item label="Select package type" value="" style={styles.pickerItem} />
+              <Picker.Item
+                label="Select package type"
+                value=""
+                style={styles.pickerItem}
+              />
               {packageTypes.map((type) => (
-                <Picker.Item key={type} label={type} value={type} style={styles.pickerItem} />
+                <Picker.Item
+                  key={type}
+                  label={type}
+                  value={type}
+                  style={styles.pickerItem}
+                />
               ))}
             </Picker>
           </View>
         </View>
-        
+
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Weight</Text>
           <View style={styles.pickerWrapper}>
@@ -456,14 +520,23 @@ export default function Book() {
                 setSelectedWeight(itemValue);
               }}
             >
-              <Picker.Item label="Select weight" value="" style={styles.pickerItem} />
+              <Picker.Item
+                label="Select weight"
+                value=""
+                style={styles.pickerItem}
+              />
               {weightOptions.map((weight) => (
-                <Picker.Item key={weight} label={weight} value={weight} style={styles.pickerItem} />
+                <Picker.Item
+                  key={weight}
+                  label={weight}
+                  value={weight}
+                  style={styles.pickerItem}
+                />
               ))}
             </Picker>
           </View>
         </View>
-        
+
         <View style={styles.pickerContainer}>
           <Text style={styles.pickerLabel}>Payment Type</Text>
           <View style={styles.pickerWrapper}>
@@ -475,13 +548,18 @@ export default function Book() {
               }}
             >
               {paymentTypes.map((type) => (
-                <Picker.Item key={type} label={type} value={type} style={styles.pickerItem} />
+                <Picker.Item
+                  key={type}
+                  label={type}
+                  value={type}
+                  style={styles.pickerItem}
+                />
               ))}
             </Picker>
           </View>
         </View>
-        
-        <View style={styles.inputContainer}>
+
+        {/* <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Parcel Value (Optional)</Text>
           <TextInput
             style={styles.textInput}
@@ -490,14 +568,14 @@ export default function Book() {
             onChangeText={setParcelValue}
             keyboardType="numeric"
           />
-        </View>
-        
+        </View> */}
+
         <View style={styles.priceContainer}>
           <Text style={styles.priceLabel}>Estimated Price:</Text>
           <Text style={styles.priceValue}>₹{price}</Text>
         </View>
       </View>
-      
+
       {/* Pickup Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Pickup Details</Text>
@@ -522,7 +600,7 @@ export default function Book() {
             keyboardType="phone-pad"
           />
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Address</Text>
           <View style={styles.addressContainer}>
@@ -530,7 +608,7 @@ export default function Book() {
               {pickupAddress ? (
                 <View style={styles.addressDisplayContainer}>
                   <Text style={styles.addressDisplayText}>{pickupAddress}</Text>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.editAddressButton}
                     onPress={() => setPickupAddress('')}
                   >
@@ -541,10 +619,16 @@ export default function Book() {
                 <GooglePlacesAutocomplete
                   placeholder="Search pickup location"
                   onPress={(data, details = null) => {
-                    console.log("Place selected:", data);
-                    setPickupAddress(data.description);
-                    if (details) {
-                      console.log("Place details:", details);
+                    console.log('Place selected:', data);
+                    if (data && data.description) {
+                      setPickupAddress(data.description);
+                    }
+                    if (
+                      details &&
+                      details.geometry &&
+                      details.geometry.location
+                    ) {
+                      console.log('Place details:', details);
                       setPickupLocation({
                         latitude: details.geometry.location.lat,
                         longitude: details.geometry.location.lng,
@@ -554,10 +638,13 @@ export default function Book() {
                   query={{
                     key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
                     language: 'en',
+                    components: 'country:in',
                   }}
                   styles={{
                     container: {
                       flex: 0,
+                      position: 'relative',
+                      zIndex: 1,
                     },
                     textInput: {
                       height: 50,
@@ -569,15 +656,23 @@ export default function Book() {
                       backgroundColor: '#fff',
                     },
                     listView: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
                       borderWidth: 1,
                       borderColor: '#1E88E5',
                       borderRadius: 8,
                       backgroundColor: '#fff',
+                      zIndex: 2,
                     },
                     row: {
                       padding: 13,
                       height: 'auto',
                       minHeight: 44,
+                    },
+                    description: {
+                      fontSize: 14,
                     },
                   }}
                   fetchDetails={true}
@@ -586,10 +681,12 @@ export default function Book() {
                   debounce={300}
                   minLength={2}
                   listViewDisplayed="auto"
+                  textInputHide={false}
+                  keepResultsAfterBlur={true}
                 />
               )}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.mapButton}
               onPress={() => {
                 setSelectedLocationType('pickup');
@@ -600,17 +697,17 @@ export default function Book() {
               <Ionicons name="map" size={24} color="#1E88E5" />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.currentLocationButton}
             onPress={useCurrentLocationForPickup}
           >
             <Ionicons name="location" size={16} color="#1E88E5" />
             <Text style={styles.currentLocationText}>Use Current Location</Text>
           </TouchableOpacity>
-          
+
           {/* Tooltip for current location */}
           {pickupLocation && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.locationInfoButton}
               onPress={() => setShowPickupTooltip(!showPickupTooltip)}
             >
@@ -618,7 +715,7 @@ export default function Book() {
               <Text style={styles.locationInfoText}>Location Info</Text>
             </TouchableOpacity>
           )}
-          
+
           {showPickupTooltip && pickupLocation && (
             <View style={styles.tooltipContainer}>
               <Text style={styles.tooltipText}>
@@ -628,12 +725,14 @@ export default function Book() {
                 Longitude: {pickupLocation.longitude.toFixed(6)}
               </Text>
               <Text style={styles.tooltipText}>
-                {pickupLocation === userLocation ? "Current Location" : "Selected Location"}
+                {pickupLocation === userLocation
+                  ? 'Current Location'
+                  : 'Selected Location'}
               </Text>
             </View>
           )}
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Locality</Text>
           <TextInput
@@ -644,7 +743,7 @@ export default function Book() {
           />
         </View>
       </View>
-      
+
       {/* Drop-off Details Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Drop-off Details</Text>
@@ -668,15 +767,17 @@ export default function Book() {
             keyboardType="phone-pad"
           />
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Address</Text>
           <View style={styles.addressContainer}>
             <View style={styles.addressInputContainer}>
               {deliveryAddress ? (
                 <View style={styles.addressDisplayContainer}>
-                  <Text style={styles.addressDisplayText}>{deliveryAddress}</Text>
-                  <TouchableOpacity 
+                  <Text style={styles.addressDisplayText}>
+                    {deliveryAddress}
+                  </Text>
+                  <TouchableOpacity
                     style={styles.editAddressButton}
                     onPress={() => setDeliveryAddress('')}
                   >
@@ -687,8 +788,14 @@ export default function Book() {
                 <GooglePlacesAutocomplete
                   placeholder="Search delivery location"
                   onPress={(data, details = null) => {
-                    setDeliveryAddress(data.description);
-                    if (details) {
+                    if (data && data.description) {
+                      setDeliveryAddress(data.description);
+                    }
+                    if (
+                      details &&
+                      details.geometry &&
+                      details.geometry.location
+                    ) {
                       setDeliveryLocation({
                         latitude: details.geometry.location.lat,
                         longitude: details.geometry.location.lng,
@@ -698,10 +805,13 @@ export default function Book() {
                   query={{
                     key: 'AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8',
                     language: 'en',
+                    components: 'country:in',
                   }}
                   styles={{
                     container: {
                       flex: 0,
+                      position: 'relative',
+                      zIndex: 1,
                     },
                     textInput: {
                       height: 50,
@@ -713,15 +823,23 @@ export default function Book() {
                       backgroundColor: '#fff',
                     },
                     listView: {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
                       borderWidth: 1,
                       borderColor: '#1E88E5',
                       borderRadius: 8,
                       backgroundColor: '#fff',
+                      zIndex: 2,
                     },
                     row: {
                       padding: 13,
                       height: 'auto',
                       minHeight: 44,
+                    },
+                    description: {
+                      fontSize: 14,
                     },
                   }}
                   fetchDetails={true}
@@ -730,10 +848,12 @@ export default function Book() {
                   debounce={300}
                   minLength={2}
                   listViewDisplayed="auto"
+                  textInputHide={false}
+                  keepResultsAfterBlur={true}
                 />
               )}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.mapButton}
               onPress={() => {
                 setSelectedLocationType('delivery');
@@ -744,10 +864,10 @@ export default function Book() {
               <Ionicons name="map" size={24} color="#1E88E5" />
             </TouchableOpacity>
           </View>
-          
+
           {/* Tooltip for delivery location */}
           {deliveryLocation && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.locationInfoButton}
               onPress={() => setShowDeliveryTooltip(!showDeliveryTooltip)}
             >
@@ -755,7 +875,7 @@ export default function Book() {
               <Text style={styles.locationInfoText}>Location Info</Text>
             </TouchableOpacity>
           )}
-          
+
           {showDeliveryTooltip && deliveryLocation && (
             <View style={styles.tooltipContainer}>
               <Text style={styles.tooltipText}>
@@ -765,12 +885,14 @@ export default function Book() {
                 Longitude: {deliveryLocation.longitude.toFixed(6)}
               </Text>
               <Text style={styles.tooltipText}>
-                {deliveryLocation === userLocation ? "Current Location" : "Selected Location"}
+                {deliveryLocation === userLocation
+                  ? 'Current Location'
+                  : 'Selected Location'}
               </Text>
             </View>
           )}
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Locality</Text>
           <TextInput
@@ -781,11 +903,11 @@ export default function Book() {
           />
         </View>
       </View>
-      
+
       {/* Time and Date Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Pickup Time & Date</Text>
-        
+
         <View style={styles.timeContainer}>
           <View style={styles.timePickerContainer}>
             <Text style={styles.timeLabel}>Hours</Text>
@@ -799,7 +921,7 @@ export default function Book() {
               ))}
             </Picker>
           </View>
-          
+
           <View style={styles.timePickerContainer}>
             <Text style={styles.timeLabel}>Minutes</Text>
             <Picker
@@ -808,15 +930,15 @@ export default function Book() {
               onValueChange={(itemValue) => setMinutes(itemValue)}
             >
               {Array.from({ length: 60 }, (_, i) => i).map((minute) => (
-                <Picker.Item 
-                  key={minute} 
-                  label={minute.toString().padStart(2, '0')} 
-                  value={minute} 
+                <Picker.Item
+                  key={minute}
+                  label={minute.toString().padStart(2, '0')}
+                  value={minute}
                 />
               ))}
             </Picker>
           </View>
-          
+
           <View style={styles.timePickerContainer}>
             <Text style={styles.timeLabel}>AM/PM</Text>
             <Picker
@@ -829,7 +951,7 @@ export default function Book() {
             </Picker>
           </View>
         </View>
-        
+
         <View style={styles.inputContainer}>
           <Text style={styles.inputLabel}>Date</Text>
           <TextInput
@@ -841,11 +963,11 @@ export default function Book() {
           />
         </View>
       </View>
-      
+
       {/* Instructions Section */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Additional Instructions</Text>
-        
+
         <View style={styles.inputContainer}>
           <TextInput
             style={[styles.textInput, styles.multilineInput]}
@@ -857,7 +979,7 @@ export default function Book() {
           />
         </View>
       </View>
-      
+
       {/* Submit Button */}
       <TouchableOpacity
         style={[styles.submitButton, !isFormComplete && styles.disabledButton]}
@@ -870,7 +992,7 @@ export default function Book() {
           <Text style={styles.submitButtonText}>Proceed to Payment</Text>
         )}
       </TouchableOpacity>
-      
+
       {/* Map Modal for Pickup Location */}
       <Modal
         visible={showPickupMap}
@@ -885,17 +1007,21 @@ export default function Book() {
               <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
           </View>
-          
+
           <MapView
             ref={pickupMapRef}
             style={styles.map}
             provider={PROVIDER_GOOGLE}
-            initialRegion={userLocation ? {
-              latitude: userLocation.latitude,
-              longitude: userLocation.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            } : undefined}
+            initialRegion={
+              userLocation
+                ? {
+                    latitude: userLocation.latitude,
+                    longitude: userLocation.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }
+                : undefined
+            }
             onPress={(e) => handleMapMarkerPress(e.nativeEvent.coordinate)}
           >
             {userLocation && (
@@ -913,9 +1039,9 @@ export default function Book() {
               />
             )}
           </MapView>
-          
+
           <View style={styles.mapFooter}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.currentLocationMapButton}
               onPress={() => {
                 if (userLocation) {
@@ -924,9 +1050,11 @@ export default function Book() {
               }}
             >
               <Ionicons name="location" size={20} color="#fff" />
-              <Text style={styles.currentLocationMapButtonText}>Use Current Location</Text>
+              <Text style={styles.currentLocationMapButtonText}>
+                Use Current Location
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.confirmButton}
               onPress={handleConfirmLocation}
             >
@@ -935,7 +1063,7 @@ export default function Book() {
           </View>
         </View>
       </Modal>
-      
+
       {/* Map Modal for Delivery Location */}
       <Modal
         visible={showDeliveryMap}
@@ -950,29 +1078,30 @@ export default function Book() {
               <Ionicons name="close" size={24} color="#333" />
             </TouchableOpacity>
           </View>
-          
+
           <MapView
             ref={deliveryMapRef}
             style={styles.map}
             provider={PROVIDER_GOOGLE}
-            initialRegion={userLocation ? {
-              latitude: userLocation.latitude,
-              longitude: userLocation.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            } : undefined}
+            initialRegion={
+              userLocation
+                ? {
+                    latitude: userLocation.latitude,
+                    longitude: userLocation.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }
+                : undefined
+            }
             onPress={(e) => handleMapMarkerPress(e.nativeEvent.coordinate)}
           >
             {selectedLocation && (
-              <Marker
-                coordinate={selectedLocation}
-                title="Selected Location"
-              />
+              <Marker coordinate={selectedLocation} title="Selected Location" />
             )}
           </MapView>
-          
+
           <View style={styles.mapFooter}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.confirmButton}
               onPress={handleConfirmLocation}
             >

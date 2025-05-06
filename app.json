@@ -32,7 +32,12 @@
       }
     },
     "android": {
-      "package": "com.arbazkhan007.boltexponativewind"
+      "package": "com.arbazkhan007.boltexponativewind",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8"
+        }
+      }
     },
     "owner": "arbazkhan007"
   }
