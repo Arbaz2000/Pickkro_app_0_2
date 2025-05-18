@@ -106,7 +106,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       
       showSnackbar('Login successful!', 'success');
-      router.replace('/(tabs)/dashboard');
+      
+      setTimeout(() => {
+        router.replace('/(tabs)/dashboard');
+      }, 100);
       
     } catch (error) {
       showSnackbar(

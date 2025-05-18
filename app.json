@@ -32,7 +32,7 @@
       }
     },
     "android": {
-      "package": "com.arbazkhan007.boltexponativewind",
+      "package": "com.pikkro_customer",
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyCo28ctuRkyNaMItMhh9WshkyEqQmktuT8"

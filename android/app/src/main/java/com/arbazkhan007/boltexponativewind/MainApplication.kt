@@ -1,4 +1,4 @@
-package com.arbazkhan007.boltexponativewind
+package com.pikkro_customer
 
 import android.app.Application
 import android.content.res.Configuration
